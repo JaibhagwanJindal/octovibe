@@ -131,20 +131,24 @@ export default function App() {
 
           <div className="space-y-3">
             {!token ? (
-              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
+              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-all duration-150">
                 <i className="fab fa-github text-sm"></i> Connect GitHub Account
               </button>
             ) : (
-              <div className="bg-black/20 border border-[#30363d] p-2.5 rounded-lg flex items-center justify-between">
+              <div className="bg-gradient-to-r from-emerald-950/10 to-transparent border border-emerald-500/20 p-2.5 rounded-lg flex items-center justify-between animate-fadeIn">
                 <div className="truncate">
-                  <p className="text-[9px] uppercase font-bold text-gray-500">Active Tenant</p>
-                  <p className="text-xs font-mono font-bold text-[#58a6ff] truncate">@{username}</p>
+                  <p className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span> Live Tenant Session
+                  </p>
+                  <p className="text-xs font-mono font-bold text-white truncate mt-0.5">@{username}</p>
                 </div>
-                <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-red-300 bg-red-500/5 px-2 py-1 rounded border border-red-500/10 transition-colors">Disconnect</button>
+                <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-white hover:bg-red-600 bg-red-500/5 px-2.5 py-1 rounded border border-red-500/20 transition-all duration-150">
+                  Sign Out
+                </button>
               </div>
             )}
 
-            <div>
+            <div className="pt-2">
               <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Explore Profile Handle</label>
               <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none font-mono focus:border-[#58a6ff]" />
             </div>
@@ -159,7 +163,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Layout</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Component Layout</label>
               <select value={heroLayout} onChange={e => setHeroLayout(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md p-1.5 text-xs text-white outline-none">
                 <option value="minimalist">Ultra-Minimalist Profile</option>
                 <option value="terminal">Cyber-Terminal Console</option>
@@ -167,37 +171,13 @@ export default function App() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Language Architecture</label>
-              <select value={langLayout} onChange={e => setLangLayout(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md p-1.5 text-xs text-white outline-none">
-                <option value="pipeline">Continuous Pipeline Bar</option>
-                <option value="grid">Isolate Categorized Badges</option>
-              </select>
-            </div>
-
             <div className="border-t border-[#21262d] pt-3 space-y-2">
-              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Art</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
               <input type="text" value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <div className="grid grid-cols-2 gap-1.5">
-                <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] border border-[#30363d] rounded-md p-1 text-[10px] text-white outline-none">
-                  <option value="flat">2D Flat</option>
-                  <option value="3d">3D Glass</option>
-                </select>
-                <select value={artBg} onChange={e => setArtBg(e.target.value)} className="bg-[#161b22] border border-[#30363d] rounded-md p-1 text-[10px] text-white outline-none">
-                  <option value="0">Shade 0</option>
-                  <option value="1">Shade 1</option>
-                  <option value="2">Shade 2</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="border-t border-[#21262d] pt-3">
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1.5">Section Visibility</label>
-              <div className="grid grid-cols-2 gap-1">
-                {Object.keys(visible).map(key => (
-                  <button key={key} onClick={() => setVisible(v => ({ ...v, [key]: !v[key] }))} className={`py-1 rounded text-[9px] font-bold uppercase border transition-all ${visible[key] ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/20' : 'bg-transparent text-gray-600 border-transparent'}`}>{key}</button>
-                ))}
+                <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded"><option value="flat">2D Flat</option><option value="3d">3D Glass</option></select>
+                <select value={artBg} onChange={e => setArtBg(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded"><option value="0">Shade 0</option><option value="1">Shade 1</option><option value="2">Shade 2</option></select>
               </div>
             </div>
           </div>
@@ -211,31 +191,11 @@ export default function App() {
           <div className="w-full space-y-8 max-w-[740px] mx-auto">
 
             {visible.hero && (
-              <div className="w-full">
-                {heroLayout === 'minimalist' && (
-                  <div className="text-center py-2">
-                    <img src={profile.avatarUrl} className="w-20 h-20 rounded-full mx-auto border-4 shadow-xl" style={{ borderColor: p.primaryColor }} alt="" />
-                    <h2 className="text-2xl font-black text-white tracking-tight mt-3">{profile.name}</h2>
-                    <p className="text-sm font-mono font-bold" style={{ color: p.primaryColor }}>@{profile.login}</p>
-                    <p className="text-xs text-gray-300 mt-2 font-medium leading-relaxed max-w-xl mx-auto">{profile.bio}</p>
-                  </div>
-                )}
-                {heroLayout === 'terminal' && (
-                  <div className="bg-black/40 rounded-xl p-5 border font-mono text-[11px] space-y-1" style={{ borderColor: p.cardBorder }}>
-                    <p><span className="text-emerald-400">visitor@octovibe:~#</span> fetch info --user @{profile.login}</p>
-                    <p className="pl-4 text-gray-300">{`{ "name": "${profile.name}", "repositories": ${profile.repos}, "bio": "${profile.bio}" }`}</p>
-                  </div>
-                )}
-                {heroLayout === 'corporate' && (
-                  <div className="flex items-center gap-6 p-5 rounded-xl" style={{ backgroundColor: p.cardBg }}>
-                    <img src={profile.avatarUrl} className="w-16 h-16 rounded-xl border shadow" style={{ borderColor: p.cardBorder }} alt="" />
-                    <div className="space-y-0.5">
-                      <h3 className="text-lg font-bold text-white">{profile.name}</h3>
-                      <p className="text-xs text-gray-400">@{profile.login} • {profile.location}</p>
-                      <p className="text-xs text-gray-300 font-medium pt-1">{profile.bio}</p>
-                    </div>
-                  </div>
-                )}
+              <div className="text-center py-2 animate-fadeIn">
+                <img src={profile.avatarUrl} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
+                <h2 className="text-2xl font-black text-white tracking-tight mt-3">{profile.name}</h2>
+                <p className="text-sm font-mono font-bold" style={{ color: p.primaryColor }}>@{profile.login}</p>
+                <p className="text-xs text-gray-300 mt-2 font-medium max-w-xl mx-auto">{profile.bio}</p>
               </div>
             )}
 
