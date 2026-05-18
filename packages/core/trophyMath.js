@@ -1,156 +1,40 @@
-/**
- * calculateTrophyTiers
- * Computes gamified achievement tiers from raw GitHub profile & repo data.
- * Tiers: Bronze → Silver → Gold → Platinum
- *
- * @param {Object} userData  - GitHub user object (followers, public_repos, etc.)
- * @param {Array}  repoData  - Array of repository objects from GitHub API
- * @returns {Array} achievements - List of earned achievement objects
- */
-export function calculateTrophyTiers(userData, repoData) {
-  const tiers = {
-    BRONZE: 'Bronze',
-    SILVER: 'Silver',
-    GOLD: 'Gold',
-    PLATINUM: 'Platinum',
-  };
+export const TROPHY_TIERS = {
+  BRONZE: { label: 'Bronze', color: '#cd7f32', bg: '#1c120c', border: '#cd7f3244' },
+  SILVER: { label: 'Silver', color: '#c0c0c0', bg: '#1b1b1b', border: '#c0c0c044' },
+  GOLD: { label: 'Gold', color: '#ffd700', bg: '#242105', border: '#ffd70044' },
+  PLATINUM: { label: 'Platinum', color: '#e5e4e2', bg: '#16191d', border: '#e5e4e244' }
+};
 
+export function calculateAllTrophies(stats) {
   const achievements = [];
 
-  // ── Star Lord ────────────────────────────────────────────────────────────
-  const totalStars = repoData.reduce((acc, r) => acc + (r.stargazers_count || 0), 0);
+  const evaluate = (id, title, value, thresholds, icon) => {
+    let tier = null;
+    if (value >= thresholds.platinum) tier = TROPHY_TIERS.PLATINUM;
+    else if (value >= thresholds.gold) tier = TROPHY_TIERS.GOLD;
+    else if (value >= thresholds.silver) tier = TROPHY_TIERS.SILVER;
+    else if (value >= thresholds.bronze) tier = TROPHY_TIERS.BRONZE;
 
-  if (totalStars >= 100) {
-    achievements.push({
-      id: 'stars',
-      title: 'Star Lord',
-      tier: tiers.PLATINUM,
-      color: '#e5e4e2',
-      icon: 'fa-rocket',
-      value: totalStars,
-      description: `Accumulated ${totalStars} total stars across all repositories.`,
-    });
-  } else if (totalStars >= 50) {
-    achievements.push({
-      id: 'stars',
-      title: 'Superstar',
-      tier: tiers.GOLD,
-      color: '#ffd700',
-      icon: 'fa-star',
-      value: totalStars,
-      description: `Accumulated ${totalStars} total stars across all repositories.`,
-    });
-  } else if (totalStars >= 10) {
-    achievements.push({
-      id: 'stars',
-      title: 'Shooting Star',
-      tier: tiers.SILVER,
-      color: '#c0c0c0',
-      icon: 'fa-star-half-stroke',
-      value: totalStars,
-      description: `Accumulated ${totalStars} total stars across all repositories.`,
-    });
-  } else {
-    achievements.push({
-      id: 'stars',
-      title: 'Rising Star',
-      tier: tiers.BRONZE,
-      color: '#cd7f32',
-      icon: 'fa-star',
-      value: totalStars,
-      description: `Accumulated ${totalStars} total stars across all repositories.`,
-    });
-  }
+    if (tier) {
+      achievements.push({ id, title, value, ...tier, icon });
+    }
+  };
 
-  // ── Repository Count ─────────────────────────────────────────────────────
-  const repoCount = repoData.length;
-
-  if (repoCount >= 50) {
-    achievements.push({
-      id: 'repos',
-      title: 'Repository Titan',
-      tier: tiers.PLATINUM,
-      color: '#e5e4e2',
-      icon: 'fa-database',
-      value: repoCount,
-      description: `Maintains ${repoCount} public repositories.`,
-    });
-  } else if (repoCount >= 20) {
-    achievements.push({
-      id: 'repos',
-      title: 'Prolific Builder',
-      tier: tiers.GOLD,
-      color: '#ffd700',
-      icon: 'fa-cubes',
-      value: repoCount,
-      description: `Maintains ${repoCount} public repositories.`,
-    });
-  } else if (repoCount >= 5) {
-    achievements.push({
-      id: 'repos',
-      title: 'Active Creator',
-      tier: tiers.SILVER,
-      color: '#c0c0c0',
-      icon: 'fa-cube',
-      value: repoCount,
-      description: `Maintains ${repoCount} public repositories.`,
-    });
-  } else {
-    achievements.push({
-      id: 'repos',
-      title: 'First Forges',
-      tier: tiers.BRONZE,
-      color: '#cd7f32',
-      icon: 'fa-hammer',
-      value: repoCount,
-      description: `Maintains ${repoCount} public repositories.`,
-    });
-  }
-
-  // ── Follower Fame ────────────────────────────────────────────────────────
-  const followers = userData?.followers ?? 0;
-
-  if (followers >= 500) {
-    achievements.push({
-      id: 'followers',
-      title: 'Community Icon',
-      tier: tiers.PLATINUM,
-      color: '#e5e4e2',
-      icon: 'fa-users',
-      value: followers,
-      description: `Inspiring ${followers} followers on GitHub.`,
-    });
-  } else if (followers >= 100) {
-    achievements.push({
-      id: 'followers',
-      title: 'Influential Dev',
-      tier: tiers.GOLD,
-      color: '#ffd700',
-      icon: 'fa-user-group',
-      value: followers,
-      description: `Inspiring ${followers} followers on GitHub.`,
-    });
-  } else if (followers >= 20) {
-    achievements.push({
-      id: 'followers',
-      title: 'Growing Audience',
-      tier: tiers.SILVER,
-      color: '#c0c0c0',
-      icon: 'fa-user-plus',
-      value: followers,
-      description: `Inspiring ${followers} followers on GitHub.`,
-    });
-  } else {
-    achievements.push({
-      id: 'followers',
-      title: 'Getting Known',
-      tier: tiers.BRONZE,
-      color: '#cd7f32',
-      icon: 'fa-user',
-      value: followers,
-      description: `Inspiring ${followers} followers on GitHub.`,
-    });
-  }
+  // 14 Core Telemetry Metrics Threshold Mapping
+  evaluate('stars', 'Star Lord', stats.stars || 0, { bronze: 10, silver: 100, gold: 500, platinum: 1000 }, 'fa-star');
+  evaluate('commits', 'Commit Monster', stats.commits || 0, { bronze: 100, silver: 1000, gold: 5000, platinum: 10000 }, 'fa-cubes');
+  evaluate('repos', 'Prolific Creator', stats.repos || 0, { bronze: 5, silver: 20, gold: 50, platinum: 100 }, 'fa-book-bookmark');
+  evaluate('forks', 'Fork Magnet', stats.forks || 0, { bronze: 5, silver: 25, gold: 100, platinum: 500 }, 'fa-code-fork');
+  evaluate('prs', 'Open Architect', stats.prs || 0, { bronze: 5, silver: 25, gold: 100, platinum: 250 }, 'fa-code-merge');
+  evaluate('reviews', 'Code Auditor', stats.reviews || 0, { bronze: 2, silver: 10, gold: 50, platinum: 200 }, 'fa-clipboard-check');
+  evaluate('issues', 'Bug Crusher', stats.issues || 0, { bronze: 5, silver: 20, gold: 100, platinum: 500 }, 'fa-circle-dot');
+  evaluate('discussions', 'The Oracle', stats.discussions || 0, { bronze: 1, silver: 5, gold: 20, platinum: 50 }, 'fa-comments');
+  evaluate('polyglot', 'The Polyglot', stats.languagesCount || 0, { bronze: 3, silver: 5, gold: 8, platinum: 12 }, 'fa-language');
+  evaluate('longevity', 'The Ancient One', stats.accountAgeYears || 0, { bronze: 1, silver: 3, gold: 5, platinum: 8 }, 'fa-hourglass-start');
+  evaluate('nightowl', 'The Night Owl', stats.nightCommitRatio || 0, { bronze: 10, silver: 25, gold: 50, platinum: 75 }, 'fa-moon');
+  evaluate('earlybird', 'The Early Bird', stats.earlyCommitRatio || 0, { bronze: 10, silver: 25, gold: 50, platinum: 75 }, 'fa-sun');
+  evaluate('docs', 'The Documentarian', stats.docsChangesK || 0, { bronze: 5, silver: 25, gold: 100, platinum: 500 }, 'fa-file-lines');
+  evaluate('gists', 'Gist Genius', stats.gists || 0, { bronze: 2, silver: 10, gold: 30, platinum: 70 }, 'fa-code');
 
   return achievements;
 }
