@@ -32,7 +32,7 @@ export default function App() {
 
   // GitHub OAuth SaaS Handshake — paste your GitHub OAuth App Client ID in Developer Settings
   const triggerGitHubLogin = () => {
-    const CLIENT_ID = 'YOUR_GITHUB_OAUTH_CLIENT_ID';
+    const CLIENT_ID = 'Ov23li8kTznRESFil5bV';
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=read:user,repo`;
   };
 
