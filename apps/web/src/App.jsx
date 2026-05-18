@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { fetchUserTelemetry, calculateAllTrophies, buildArtGrid, getTotalCols } from '@octovibe/core';
+import { buildArtGrid, getTotalCols } from '@octovibe/core';
 import { getThemes } from '@octovibe/themes';
 
 export default function App() {
   const currentYear = new Date().getFullYear();
   const themesList = getThemes();
 
-  // SaaS Multi-Tenant Authentication Sessions
+  // SaaS Multi-Tenant Authentication Sessions Initialization
   const [token, setToken] = useState(localStorage.getItem('octovibe_token') || '');
-  const [username, setUsername] = useState(localStorage.getItem('octovibe_user') || 'JaibhagwanJindal');
+  const [username, setUsername] = useState(localStorage.getItem('octovibe_user') || 'octovibe');
 
   const [activeTheme, setActiveTheme] = useState('midnight-blue');
   const [heroLayout, setHeroLayout] = useState('minimalist');
   const [langLayout, setLangLayout] = useState('pipeline');
 
-  const [artTitle, setArtTitle] = useState('JAIBHAGWAN JINDAL');
-  const [artText, setArtText] = useState('JAIBHAGWAN');
+  const [artTitle, setArtTitle] = useState('OCTOVIBE VISUALS');
+  const [artText, setArtText] = useState('CONNECTED');
   const [artStyle, setArtStyle] = useState('flat');
   const [artBg, setArtBg] = useState('0');
 
@@ -30,7 +30,7 @@ export default function App() {
   const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const totalCols = getTotalCols(currentYear);
 
-  // GitHub OAuth SaaS Handshake — paste your GitHub OAuth App Client ID in Developer Settings
+  // Trigger GitHub Authentication Redirect with secure app client context ID
   const triggerGitHubLogin = () => {
     const CLIENT_ID = 'Ov23li8kTznRESFil5bV';
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=read:user,repo`;
@@ -40,16 +40,16 @@ export default function App() {
     localStorage.removeItem('octovibe_token');
     localStorage.removeItem('octovibe_user');
     setToken('');
-    setUsername('JaibhagwanJindal');
+    setUsername('octovibe');
     setProfile(null);
   };
 
+  // GitHub OAuth code exchange — POSTs to secure Vercel backend gateway (never exposes CLIENT_SECRET)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const authCode = params.get('code');
 
     if (authCode) {
-      // Execute live background exchange across the secure Vercel gateway route
       fetch('https://octovibe.vercel.app/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -59,7 +59,6 @@ export default function App() {
         .then(data => {
           if (data.access_token) {
             localStorage.setItem('octovibe_token', data.access_token);
-            // Query user handle info instantly using the freshly acquired token credentials
             fetch('https://api.github.com/user', {
               headers: { 'Authorization': `token ${data.access_token}` }
             })
@@ -72,15 +71,26 @@ export default function App() {
               });
           }
         })
-        .catch(err => console.error('SaaS Token authorization pipeline handshake error:', err));
+        .catch(err => console.error('SaaS OAuth Pipeline exchange exception failure:', err));
     }
   }, []);
 
+  // Fetch telemetry via backend proxy to avoid browser-level 403 GraphQL cross-origin rejections
   useEffect(() => {
-    fetchUserTelemetry(username, token).then(res => {
-      setProfile(res);
-      setTrophies(calculateAllTrophies(res));
-    });
+    const reqHeaders = {};
+    if (token) {
+      reqHeaders['Authorization'] = `Bearer ${token}`;
+    }
+
+    fetch(`https://octovibe.vercel.app/api/render?user=${username}&json=true`, { headers: reqHeaders })
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.profile) {
+          setProfile(resData.profile);
+          setTrophies(resData.trophies || []);
+        }
+      })
+      .catch(err => console.error('Telemetry profile stream extraction failed:', err));
   }, [username, token]);
 
   useEffect(() => {
@@ -98,7 +108,7 @@ export default function App() {
 
   if (!profile) return (
     <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono animate-pulse">
-      Synchronizing multi-tenant identity profile matrix...
+      Routing live data queries through core SaaS proxy lines...
     </div>
   );
 
@@ -114,19 +124,18 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[#010409] text-gray-300 font-sans antialiased overflow-hidden select-none">
 
-      {/* SIDEBAR PARAMETERS CONSOLE PANEL */}
+      {/* SIDEBAR DASHBOARD CONSOLE PANEL */}
       <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#388bfd] to-[#238636] flex items-center justify-center font-black text-white">🐙</div>
             <div>
-              <h1 className="text-sm font-bold text-white">OctoVibe Portal</h1>
-              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">SaaS Edition</p>
+              <h1 className="text-sm font-bold text-white">OctoVibe Studio</h1>
+              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">SaaS Portal</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            {/* SaaS Authentication Trigger Buttons */}
             {!token ? (
               <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-colors">
                 <i className="fab fa-github text-sm"></i> Connect GitHub Account
@@ -134,7 +143,7 @@ export default function App() {
             ) : (
               <div className="bg-black/20 border border-[#30363d] p-2.5 rounded-lg flex items-center justify-between">
                 <div className="truncate">
-                  <p className="text-[9px] uppercase font-bold text-gray-500">Active Tenant Session</p>
+                  <p className="text-[9px] uppercase font-bold text-gray-500">Active Tenant</p>
                   <p className="text-xs font-mono font-bold text-[#58a6ff] truncate">@{username}</p>
                 </div>
                 <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-red-300 bg-red-500/5 px-2 py-1 rounded border border-red-500/10 transition-colors">Disconnect</button>
@@ -158,9 +167,9 @@ export default function App() {
             <div>
               <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Component Layout</label>
               <select value={heroLayout} onChange={e => setHeroLayout(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md p-1.5 text-xs text-white outline-none">
-                <option value="minimalist">Ultra-Minimalist Layout</option>
-                <option value="terminal">Cyber-Terminal Engine</option>
-                <option value="corporate">Corporate Profile Tag</option>
+                <option value="minimalist">Ultra-Minimalist Profile</option>
+                <option value="terminal">Cyber-Terminal Console</option>
+                <option value="corporate">Corporate Availability Card</option>
               </select>
             </div>
 
@@ -173,9 +182,9 @@ export default function App() {
             </div>
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
-              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Customizer</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
               <input type="text" value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
-              <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text String (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
+              <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <div className="grid grid-cols-2 gap-1.5">
                 <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] border border-[#30363d] rounded-md p-1 text-[10px] text-white outline-none">
                   <option value="flat">2D Flat</option>
@@ -200,16 +209,16 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Hub • SaaS Production</div>
+        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Studio Hub • SaaS Production</div>
       </aside>
 
-      {/* CONTINUOUS PREVIEW CANVAS TIMELINE STREAM */}
+      {/* STACKED LIVE WORKSPACE PREVIEW STREAM */}
       <main className="flex-1 overflow-y-auto p-10 space-y-6">
 
         <div className="p-8 rounded-xl border select-text" style={{ backgroundColor: p.background, borderColor: p.cardBorder }}>
           <div className="w-full space-y-8 max-w-[740px] mx-auto">
 
-            {/* MODULE 1: HERO ACCOUNT SECTION */}
+            {/* MODULE 1: HERO PROFILE LAYOUT */}
             {visible.hero && (
               <div className="w-full">
                 {heroLayout === 'minimalist' && (
@@ -239,7 +248,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 2: LIVE TELEMETRY COUNTS METRICS */}
+            {/* MODULE 2: REAL ACCOUNT TELEMETRY DATA STATS */}
             {visible.metrics && (
               <div className="grid grid-cols-4 gap-4 w-full">
                 {[
@@ -259,29 +268,29 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 3: TELEMETRY STREAKS PIPELINE CONTAINER */}
+            {/* MODULE 3: TELEMETRY ENGINE STREAK TILES */}
             {visible.streak && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Telemetry Consistency Engine</h4>
                 <div className="grid grid-cols-3 gap-4 font-mono text-xs">
                   <div className="p-3 bg-black/20 rounded-lg border border-white/5">
                     <p className="text-gray-500 uppercase text-[9px]">Current Active Streak</p>
-                    <p className="text-xl font-black mt-0.5" style={{ color: p.primaryColor }}>{profile.currentStreak} Day</p>
+                    <p className="text-xl font-black mt-0.5" style={{ color: p.primaryColor }}>{profile.currentStreak || 0} Day</p>
                   </div>
                   <div className="p-3 bg-black/20 rounded-lg border border-white/5">
                     <p className="text-gray-500 uppercase text-[9px]">Longest Historic Streak</p>
-                    <p className="text-xl font-black text-white mt-0.5">{profile.longestStreak} Days</p>
+                    <p className="text-xl font-black text-white mt-0.5">{profile.longestStreak || 0} Days</p>
                   </div>
                   <div className="p-3 bg-black/20 rounded-lg border border-white/5">
                     <p className="text-gray-500 uppercase text-[9px]">Annual Volume (2026)</p>
-                    <p className="text-xl font-black text-white mt-0.5">{profile.commits}</p>
+                    <p className="text-xl font-black text-white mt-0.5">{profile.commits || 0}</p>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* MODULE 4: TECHNOLOGY PIPELINE CHART */}
-            {visible.languages && (
+            {/* MODULE 4: LANGUAGE FINGERPRINT CHART */}
+            {visible.languages && profile.topLanguages && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Language Fingerprint Matrix</h4>
                 <div className="w-full h-3 rounded-full overflow-hidden flex bg-gray-800">
@@ -299,7 +308,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 5: REWARDS PLATFORM TROPHIES MATRIX */}
+            {/* MODULE 5: THEMED BADGES MATRIX SHELF */}
             {visible.trophies && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Earned Platform Rewards</h4>
@@ -319,7 +328,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 6: CHRONOLOGICAL ART MATRIX WITH PIXEL-PRECISE MONTH HEADERS */}
+            {/* MODULE 6: CONTRIBUTION GRAPH PATTERN COMPONENT */}
             {visible.art && (
               <div className="w-full overflow-hidden">
                 <div id={artStyle === 'flat' ? 'flatCanvas' : 'threeDCanvas'} className="p-5 rounded-xl border shadow-xl bg-[#0d1117] w-full border-[#30363d]">
@@ -330,7 +339,6 @@ export default function App() {
 
                   <div className="w-full overflow-x-auto">
                     <div className="w-full flex flex-col gap-1 select-none">
-                      {/* Pixel-precise month label positioning row — 13px per column cell */}
                       <div className="flex h-5 relative text-[9px] text-gray-400 font-bold mb-1 pl-8 w-full">
                         {MONS.map((m, idx) => {
                           const colOffset = Math.floor((idx / 12) * totalCols);
@@ -361,7 +369,7 @@ export default function App() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-[10px] text-gray-400">
-                    <span><b>{artCommits}</b> commits required to forge this layout profile blueprint array stack.</span>
+                    <span><b>{artCommits}</b> commits required to build this typography layout matrix.</span>
                     <div className="flex items-center gap-1">
                       <span className="text-[9px] mr-1">Less</span>
                       {CLR_MAP.map((c, i) => <div key={i} className="w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: c, border: i === 0 ? '1px solid #21262d' : 'none' }} />)}
@@ -375,7 +383,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* EMBED MARKDOWN SNIPPET GENERATOR LINKS */}
+        {/* EMBED CODE PRODUCTION MARKDOWN SNIPPET REGISTRY */}
         <div className="bg-[#0d1117] border border-[#30363d] rounded-xl p-5 space-y-3 shadow-xl select-text">
           <div>
             <h3 className="text-sm font-bold text-white">Production Embed Code Generation Registry</h3>
