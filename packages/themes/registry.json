@@ -1,0 +1,34 @@
+{
+  "themes": [
+    {
+      "id": "dark-green",
+      "name": "Classic Octocat Green",
+      "author": "OctoVibe Core",
+      "palette": {
+        "background": "#0d1117",
+        "textPrimary": "#ffffff",
+        "textSecondary": "#c9d1d9",
+        "textTertiary": "#8b949e",
+        "primaryColor": "#238636",
+        "primaryHover": "#2ea043",
+        "cardBg": "rgba(22, 27, 34, 0.6)",
+        "cardBorder": "rgba(48, 54, 61, 0.5)"
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "name": "Midnight Ocean",
+      "author": "OctoVibe Core",
+      "palette": {
+        "background": "#010409",
+        "textPrimary": "#ffffff",
+        "textSecondary": "#c9d1d9",
+        "textTertiary": "#8b949e",
+        "primaryColor": "#388bfd",
+        "primaryHover": "#58a6ff",
+        "cardBg": "rgba(22, 27, 34, 0.7)",
+        "cardBorder": "rgba(56, 139, 253, 0.4)"
+      }
+    }
+  ]
+}

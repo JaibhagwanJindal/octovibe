@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base resets ───────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-gh-canvas text-gh-text font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gh-canvas;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gh-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gh-muted;
+  }
+}
+
+/* ── Reusable component classes ─────────────────────────────────────── */
+@layer components {
+  /* Glass card */
+  .card {
+    @apply rounded-xl border border-gh-border bg-gh-surface/60 backdrop-blur-sm shadow-card;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    @apply border-gh-green/40 shadow-glow-green;
+  }
+
+  /* Form input */
+  .input-field {
+    @apply w-full bg-gh-canvas border border-gh-border rounded-lg px-3 py-2 text-sm text-white
+           placeholder-gh-muted focus:outline-none focus:border-gh-green
+           transition-colors duration-200;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
+           bg-gh-green text-white hover:bg-gh-green-hover active:scale-95
+           transition-all duration-150 cursor-pointer select-none;
+  }
+
+  /* Secondary/ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+           border border-gh-border text-gh-text hover:border-gh-green/60 hover:text-white
+           transition-all duration-150 cursor-pointer select-none;
+  }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gh-muted
+           hover:bg-gh-surface hover:text-white transition-all duration-150 cursor-pointer;
+  }
+
+  .nav-item.active {
+    @apply bg-gh-surface text-white;
+  }
+
+  /* Trophy tier badge */
+  .tier-badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold
+           border tracking-wide;
+  }
+
+  /* Stat chip */
+  .stat-chip {
+    @apply flex flex-col gap-0.5 p-3 rounded-lg bg-gh-canvas border border-gh-border/60;
+  }
+
+  /* Code / mono text */
+  .mono {
+    @apply font-mono text-gh-green;
+  }
+
+  /* Section heading */
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-widest text-gh-muted mb-3;
+  }
+
+  /* Animated gradient background blob */
+  .gradient-blob {
+    @apply absolute rounded-full blur-3xl opacity-10 pointer-events-none;
+    animation: blobFloat 8s ease-in-out infinite alternate;
+  }
+}
+
+/* ── Custom keyframes ───────────────────────────────────────────────── */
+@layer utilities {
+  @keyframes blobFloat {
+    0%   { transform: translateY(0px) scale(1); }
+    100% { transform: translateY(-24px) scale(1.06); }
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.05) 50%, transparent 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Scrollbar-less overflow for code blocks */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

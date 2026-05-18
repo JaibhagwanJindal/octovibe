@@ -1,0 +1,13 @@
+{
+  "name": "octovibe-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node api/render.js"
+  },
+  "dependencies": {
+    "@octovibe/core": "workspace:*",
+    "@octovibe/themes": "workspace:*"
+  }
+}

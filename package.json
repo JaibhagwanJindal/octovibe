@@ -1,0 +1,12 @@
+{
+  "name": "octovibe-monorepo",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter octovibe-web dev",
+    "build:web": "pnpm --filter octovibe-web build",
+    "start:api": "pnpm --filter octovibe-api start"
+  }
+}
