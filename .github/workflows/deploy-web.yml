@@ -1,0 +1,58 @@
+name: Modern Deploy Frontend Dashboard to Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-web.yml'
+
+# Core security boundaries for modern GitHub Actions deployment workflows
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Prevent overlapping parallel deployments from creating deployment conflicts
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm Package Manager
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Install Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install Monorepo Dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Compile Production Static Assets
+        run: pnpm build:web
+
+      - name: Upload Build Artifacts Directly
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+      - name: Stream Deployment straight to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
