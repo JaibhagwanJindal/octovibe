@@ -53,7 +53,10 @@ export default function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: authCode })
     })
-      .then(r => r.json())
+      .then(res => {
+        if (!res.ok) throw new Error('Secure Exchange Rejected');
+        return res.json();
+      })
       .then(data => {
         if (!data.access_token) return;
         localStorage.setItem('octovibe_token', data.access_token);
@@ -62,18 +65,23 @@ export default function App() {
         })
           .then(r => r.json())
           .then(userData => {
-            localStorage.setItem('octovibe_user', userData.login);
-            setToken(data.access_token);
-            setUsername(userData.login);
-            window.history.replaceState({}, document.title, window.location.pathname);
+            if (userData.login) {
+              localStorage.setItem('octovibe_user', userData.login);
+              setToken(data.access_token);
+              setUsername(userData.login);
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
           });
       })
-      .catch(err => console.error('SaaS Handshake error:', err));
+      .catch(err => {
+        console.error('SaaS Identity authentication process exception loop:', err);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
   }, []);
 
   // Fetch telemetry via backend proxy to avoid browser GraphQL 403 errors
   useEffect(() => {
-    const reqHeaders = {};
+    const reqHeaders = { 'Content-Type': 'application/json' };
     if (token) reqHeaders['Authorization'] = `Bearer ${token}`;
 
     // CRITICAL SAAS DATA SYNC FIX: Inject dynamic timestamp to force complete browser cache bypass
@@ -101,13 +109,18 @@ export default function App() {
     setArtCommits(commits);
   }, [artText, artBg, totalCols]);
 
-  if (!profile) return <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono animate-pulse">Syncing dynamic pipeline parameters...</div>;
+  if (!profile) return (
+    <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono flex flex-col items-center justify-center gap-4">
+      <div className="w-9 h-9 border-4 border-[#388bfd] border-t-transparent rounded-full animate-spin"></div>
+      <span className="text-sm font-bold tracking-wide">Establishing encrypted connection interface to OctoVibe secure node mesh...</span>
+    </div>
+  );
 
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
 
   const triggerCopy = (viewMode, idx, extra = '') => {
-    const url = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${profile.login}&theme=${activeTheme}&view=${viewMode}${extra})`;
-    navigator.clipboard.writeText(url);
+    const targetUrl = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${profile.login}&theme=${activeTheme}&view=${viewMode}${extra})`;
+    navigator.clipboard.writeText(targetUrl);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
@@ -128,16 +141,16 @@ export default function App() {
 
           <div className="space-y-3">
             {!token ? (
-              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-colors">
+              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-colors">
                 <i className="fab fa-github text-sm"></i> Connect GitHub Account
               </button>
             ) : (
-              <div className="bg-black/20 border border-emerald-500/20 p-2.5 rounded-lg flex items-center justify-between">
+              <div className="bg-black/20 border border-emerald-500/20 p-2.5 rounded-lg flex items-center justify-between animate-fadeIn">
                 <div className="truncate">
-                  <p className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider">Live Tenant</p>
-                  <p className="text-xs font-mono font-bold text-[#58a6ff] truncate">@{username}</p>
+                  <p className="text-[9px] uppercase font-bold text-emerald-400">Live Session Active</p>
+                  <p className="text-xs font-mono font-bold text-[#58a6ff] truncate mt-0.5">@{username}</p>
                 </div>
-                <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-white hover:bg-red-600 bg-red-500/5 px-2 py-1 rounded border border-red-500/20 transition-all">Sign Out</button>
+                <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-white hover:bg-red-600 bg-red-500/5 px-2.5 py-1 rounded border border-red-500/20 transition-all">Sign Out</button>
               </div>
             )}
 
