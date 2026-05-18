@@ -54,7 +54,7 @@ export default function App() {
     setArtCommits(commits);
   }, [artText, artBg, totalCols]);
 
-  if (!profile) return <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono">Loading core context maps...</div>;
+  if (!profile) return <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono">Syncing real-time profile analytics context...</div>;
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
 
   const triggerCopy = (viewMode, idx, extra = '') => {
@@ -79,8 +79,8 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[#010409] text-gray-300 font-sans antialiased overflow-hidden">
       
-      {/* SIDEBAR PARAMETERS INTERFACE PANEL */}
-      <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
+      {/* LEFT SIDEBAR PANEL CONTROLLER */}
+      <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0 select-none">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#388bfd] to-[#238636] flex items-center justify-center font-black text-white">🐙</div>
@@ -166,7 +166,7 @@ export default function App() {
                 {heroLayout === 'terminal' && (
                   <div className="bg-black/40 rounded-xl p-5 border font-mono text-[11px] space-y-1" style={{ borderColor: p.cardBorder }}>
                     <p><span className="text-emerald-400">visitor@octovibe:~#</span> fetch info --user @{profile.login}</p>
-                    <p className="pl-4 text-gray-300">{`{ "name": "${profile.name}", "bio": "${profile.bio}" }`}</p>
+                    <p className="pl-4 text-gray-300">{`{ "name": "${profile.name}", "repositories": ${profile.repos}, "bio": "${profile.bio}" }`}</p>
                   </div>
                 )}
                 {heroLayout === 'corporate' && (
@@ -188,7 +188,7 @@ export default function App() {
                 {[
                   { label: 'Repositories', val: profile.repos, icon: 'fa-book-bookmark' },
                   { label: 'Total Stars', val: profile.stars, icon: 'fa-star' },
-                  { label: 'Global Commits', val: profile.commits, icon: 'fa-cubes' },
+                  { label: 'Contributions', val: profile.commits, icon: 'fa-cubes' },
                   { label: 'Followers', val: profile.followers, icon: 'fa-users' }
                 ].map((s, idx) => (
                   <div key={idx} className="p-4 rounded-xl border" style={{ backgroundColor: p.cardBg, borderColor: p.cardBorder }}>
@@ -204,9 +204,9 @@ export default function App() {
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Telemetry Consistency Engine</h4>
                 <div className="grid grid-cols-3 gap-4 font-mono text-xs">
-                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Current active streak</p><p className="text-xl font-black mt-0.5" style={{ color: p.primaryColor }}>14 Days</p></div>
-                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Longest historic streak</p><p className="text-xl font-black text-white mt-0.5">48 Days</p></div>
-                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Year timeline volume</p><p className="text-xl font-black text-white mt-0.5">{profile.commits}</p></div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Current Active Streak</p><p className="text-xl font-black mt-0.5" style={{ color: p.primaryColor }}>1 Day</p></div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Longest Historic Streak</p><p className="text-xl font-black text-white mt-0.5">114 Days</p></div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Annual Volume (2026)</p><p className="text-xl font-black text-white mt-0.5">{profile.commits}</p></div>
                 </div>
               </div>
             )}

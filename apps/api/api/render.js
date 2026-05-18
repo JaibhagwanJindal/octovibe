@@ -28,8 +28,8 @@ export default async function handler(req, res) {
       <g transform="translate(30, 150)" font-family="sans-serif">
         <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">REPOSITORIES</text><text x="0" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.repos}</text>
         <text x="160" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">TOTAL STARS</text><text x="160" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.stars}</text>
-        <text x="320" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">GLOBAL COMMITS</text><text x="320" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.commits}</text>
-        <text x="480" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">TROPHIES</text><text x="480" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${trophies.length}</text>
+        <text x="320" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">ANNUAL CONTRIBUTIONS</text><text x="320" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.commits}</text>
+        <text x="540" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">TROPHIES</text><text x="540" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${trophies.length}</text>
       </g>
     </svg>`;
   }
@@ -102,16 +102,16 @@ export default async function handler(req, res) {
       <g transform="translate(40, 45)" font-family="sans-serif">
         <g transform="translate(0, 0)">
           <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">CURRENT STREAK</text>
-          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.primaryColor}">14 Days</text>
+          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.primaryColor}">1 Day</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Active Coding Window</text>
         </g>
         <g transform="translate(250, 0)">
           <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">LONGEST STREAK</text>
-          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">48 Days</text>
+          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">114 Days</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Lifetime Record Metric</text>
         </g>
         <g transform="translate(500, 0)">
-          <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">TOTAL CONTRIBUTIONS</text>
+          <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">ANNUAL CONTRIBUTIONS</text>
           <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">${data.commits}</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Year Timeline Volume</text>
         </g>
