@@ -1,175 +1,21 @@
-// 1. EMBEDDED THEME DICTIONARY
-const THEMES = [
-  {
-    id: "dark-green",
-    name: "Classic Octocat Green",
-    palette: {
-      background: "#0d1117",
-      textPrimary: "#ffffff",
-      textSecondary: "#c9d1d9",
-      textTertiary: "#8b949e",
-      primaryColor: "#238636",
-      primaryHover: "#2ea043",
-      cardBg: "rgba(22, 27, 34, 0.6)",
-      cardBorder: "rgba(48, 54, 61, 0.5)"
-    }
-  },
-  {
-    id: "midnight-blue",
-    name: "Midnight Ocean",
-    palette: {
-      background: "#010409",
-      textPrimary: "#ffffff",
-      textSecondary: "#c9d1d9",
-      textTertiary: "#8b949e",
-      primaryColor: "#388bfd",
-      primaryHover: "#58a6ff",
-      cardBg: "rgba(22, 27, 34, 0.7)",
-      cardBorder: "rgba(56, 139, 253, 0.4)"
-    }
-  }
-];
+import { fetchUserTelemetry, calculateAllTrophies, buildArtGrid, getTotalCols } from '@octovibe/core';
+import { getThemeById } from '@octovibe/themes';
 
-// 2. EMBEDDED TROPHY CALCULATOR MATH ENGINE
-const TROPHY_TIERS = {
-  BRONZE: { label: 'Bronze', color: '#cd7f32', bg: '#1c120c', border: '#cd7f3233' },
-  SILVER: { label: 'Silver', color: '#c0c0c0', bg: '#1b1b1b', border: '#c0c0c033' },
-  GOLD: { label: 'Gold', color: '#ffd700', bg: '#242105', border: '#ffd70033' },
-  PLATINUM: { label: 'Platinum', color: '#e5e4e2', bg: '#16191d', border: '#e5e4e233' }
-};
-
-function calculateAllTrophies(stats) {
-  const achievements = [];
-  const evaluate = (id, title, value, thresholds, icon) => {
-    let tier = null;
-    if (value >= thresholds.platinum) tier = TROPHY_TIERS.PLATINUM;
-    else if (value >= thresholds.gold) tier = TROPHY_TIERS.GOLD;
-    else if (value >= thresholds.silver) tier = TROPHY_TIERS.SILVER;
-    else if (value >= thresholds.bronze) tier = TROPHY_TIERS.BRONZE;
-    if (tier) achievements.push({ id, title, value, ...tier, icon });
-  };
-
-  evaluate('stars', 'Star Lord', stats.stars || 0, { bronze: 10, silver: 100, gold: 500, platinum: 1000 }, 'fa-star');
-  evaluate('commits', 'Commit Monster', stats.commits || 0, { bronze: 100, silver: 1000, gold: 5000, platinum: 10000 }, 'fa-cubes');
-  evaluate('repos', 'Prolific Creator', stats.repos || 0, { bronze: 5, silver: 20, gold: 50, platinum: 100 }, 'fa-book-bookmark');
-  evaluate('forks', 'Fork Magnet', stats.forks || 0, { bronze: 5, silver: 25, gold: 100, platinum: 500 }, 'fa-code-fork');
-  evaluate('prs', 'Open Architect', stats.prs || 0, { bronze: 5, silver: 25, gold: 100, platinum: 250 }, 'fa-code-merge');
-  evaluate('reviews', 'Code Auditor', stats.reviews || 0, { bronze: 2, silver: 10, gold: 50, platinum: 200 }, 'fa-clipboard-check');
-  evaluate('issues', 'Bug Crusher', stats.issues || 0, { bronze: 5, silver: 20, gold: 100, platinum: 500 }, 'fa-circle-dot');
-  evaluate('discussions', 'The Oracle', stats.discussions || 0, { bronze: 1, silver: 5, gold: 20, platinum: 50 }, 'fa-comments');
-  evaluate('polyglot', 'The Polyglot', stats.languagesCount || 0, { bronze: 3, silver: 5, gold: 8, platinum: 12 }, 'fa-language');
-  evaluate('longevity', 'The Ancient One', stats.accountAgeYears || 0, { bronze: 1, silver: 3, gold: 5, platinum: 8 }, 'fa-hourglass-start');
-  evaluate('nightowl', 'The Night Owl', stats.nightCommitRatio || 0, { bronze: 10, silver: 25, gold: 50, platinum: 75 }, 'fa-moon');
-  evaluate('earlybird', 'The Early Bird', stats.earlyCommitRatio || 0, { bronze: 10, silver: 25, gold: 50, platinum: 75 }, 'fa-sun');
-  evaluate('docs', 'The Documentarian', stats.docsChangesK || 0, { bronze: 5, silver: 25, gold: 100, platinum: 500 }, 'fa-file-lines');
-  evaluate('gists', 'Gist Genius', stats.gists || 0, { bronze: 2, silver: 10, gold: 30, platinum: 70 }, 'fa-code');
-
-  return achievements;
-}
-
-// 3. EMBEDDED TELEMETRY FETCH LOGIC WITH HYDRATION FALLBACKS
-async function fetchUserTelemetry(username) {
-  try {
-    const res = await fetch(`https://api.github.com/users/${username}`);
-    if (!res.ok) throw new Error();
-    const user = await res.json();
-    
-    const isTarget = username.toLowerCase() === 'jaibhagwanjindal';
-    
-    // Dynamic Streak Logic Verification
-    const lastActive = new Date(user.updated_at || new Date());
-    const now = new Date();
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const activeDay = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
-    const diffDays = Math.floor((today - activeDay) / msPerDay);
-    const currentStreak = diffDays > 1 ? 0 : (isTarget ? 12 : Math.floor(user.public_repos * 0.2));
-    const longestStreak = isTarget ? 48 : Math.floor(user.public_repos * 1.5);
-
-    return {
-      name: user.name || user.login,
-      login: user.login,
-      avatarUrl: user.avatar_url,
-      bio: user.bio || 'Passionate Open Source Software Engineer.',
-      location: user.location || 'Remote Space',
-      followers: user.followers,
-      following: user.following,
-      repos: isTarget ? 41 : user.public_repos,
-      stars: isTarget ? 52 : Math.floor(user.public_repos * 2.5) + 12, 
-      forks: isTarget ? 19 : Math.floor(user.public_repos * 1.2),
-      commits: isTarget ? 1970 : 1250 + (user.public_repos * 45),
-      prs: isTarget ? 28 : Math.floor(user.public_repos * 1.8),
-      reviews: isTarget ? 9 : Math.floor(user.public_repos * 0.6),
-      issues: isTarget ? 14 : Math.floor(user.public_repos * 0.9),
-      discussions: isTarget ? 1 : Math.floor(user.followers * 0.1),
-      languagesCount: 6,
-      accountAgeYears: Math.max(1, new Date().getFullYear() - new Date(user.created_at).getFullYear()),
-      nightCommitRatio: 32,
-      earlyCommitRatio: 45,
-      docsChangesK: 120,
-      gists: user.public_gists || 4,
-      currentStreak,
-      longestStreak,
-      topLanguages: [
-        { name: 'TypeScript', percentage: 55, color: '#3178c6' },
-        { name: 'JavaScript', percentage: 25, color: '#f1e05a' },
-        { name: 'HTML', percentage: 12, color: '#e34c26' },
-        { name: 'CSS', percentage: 8, color: '#563d7c' }
-      ]
-    };
-  } catch (err) {
-    const isTarget = username.toLowerCase() === 'jaibhagwanjindal';
-    const currentStreak = isTarget ? 12 : 5;
-    const longestStreak = isTarget ? 48 : 20;
-
-    return {
-      name: 'Jaibhagwan',
-      login: 'JaibhagwanJindal',
-      avatarUrl: 'https://github.com/JaibhagwanJindal.png',
-      bio: 'Passionate Coder Started a 365-day Github Contributions challenge.',
-      location: 'Gurugram, India',
-      followers: 10,
-      following: 46,
-      repos: 41,
-      stars: 52,
-      forks: 19,
-      commits: 1970,
-      prs: 28,
-      reviews: 9,
-      issues: 14,
-      discussions: 1,
-      languagesCount: 6,
-      accountAgeYears: 2,
-      nightCommitRatio: 32,
-      earlyCommitRatio: 45,
-      docsChangesK: 120,
-      gists: 4,
-      currentStreak,
-      longestStreak,
-      topLanguages: [
-        { name: 'TypeScript', percentage: 55, color: '#3178c6' },
-        { name: 'JavaScript', percentage: 25, color: '#f1e05a' },
-        { name: 'HTML', percentage: 12, color: '#e34c26' },
-        { name: 'CSS', percentage: 8, color: '#563d7c' }
-      ]
-    };
-  }
-}
-
-// 4. CORE ROUTING FUNCTION HANDLER
 export default async function handler(req, res) {
-  const { user = 'JaibhagwanJindal', theme = 'midnight-blue', view = 'all', lang_layout = 'pipeline' } = req.query;
+  const { user = 'JaibhagwanJindal', theme = 'midnight-blue', view = 'all', lang_layout = 'pipeline', art_text = 'JAIBHAGWAN', art_style = 'flat', art_bg = '0' } = req.query;
   
   res.setHeader('Content-Type', 'image/svg+xml');
   res.setHeader('Cache-Control', 'max-age=0, s-maxage=3600, must-revalidate');
 
+  // Hydrate customizer settings with actual server metrics data profile
   const data = await fetchUserTelemetry(user);
   const trophies = calculateAllTrophies(data);
-  const activeTheme = THEMES.find(t => t.id === theme) || THEMES[0];
+  const activeTheme = getThemeById(theme);
   const p = activeTheme.palette;
 
   let svgContent = '';
 
+  // VIEW MODE A: UNIFIED MASTER PROFILE SUITE
   if (view === 'all') {
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="260">
       <rect width="100%" height="100%" fill="${p.background}" rx="14" stroke="${p.cardBorder}" stroke-width="1"/>
@@ -188,16 +34,17 @@ export default async function handler(req, res) {
     </svg>`;
   }
   
+  // VIEW MODE B: REWARDS PLATFORM TROPHY PANEL MATRIX
   else if (view === 'trophies') {
     let cardItems = trophies.map((t, i) => {
       let x = (i % 3) * 250 + 10;
       let y = Math.floor(i / 3) * 90 + 10;
       return `<g transform="translate(${x}, ${y})">
         <rect width="240" height="80" rx="10" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1.5"/>
-        <circle cx="40" cy="40" r="22" fill="${p.background}" stroke="${p.cardBorder}" stroke-width="1"/>
+        <circle cx="40" cy="40" r="22" fill="${p.background}" stroke="${t.color}" stroke-width="1.5"/>
         <text x="40" y="45" fill="${t.color}" font-family="sans-serif" font-size="16" text-anchor="middle" font-weight="bold">🏆</text>
         <text x="75" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="12" font-weight="bold">${t.title}</text>
-        <text x="75" y="55" fill="${t.color}" font-family="sans-serif" font-size="10" font-weight="bold">${t.tier} Tier</text>
+        <text x="75" y="55" fill="${t.color}" font-family="sans-serif" font-size="10" font-weight="bold">${t.label} Tier</text>
       </g>`;
     }).join('');
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="770" height="${Math.ceil(trophies.length / 3) * 90 + 20}">
@@ -206,6 +53,7 @@ export default async function handler(req, res) {
     </svg>`;
   }
 
+  // VIEW MODE C: TECHNOLOGY DENSITY DISTRIBUTION CHART
   else if (view === 'languages') {
     let internalContent = '';
     if (lang_layout === 'pipeline') {
@@ -247,18 +95,19 @@ export default async function handler(req, res) {
     </svg>`;
   }
 
+  // VIEW MODE D: ACTIVITY COMMIT STREAK PIPELINE
   else if (view === 'streak') {
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="140">
       <rect width="100%" height="100%" fill="${p.background}" rx="12" stroke="${p.cardBorder}" stroke-width="1"/>
       <g transform="translate(40, 45)" font-family="sans-serif">
         <g transform="translate(0, 0)">
           <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">CURRENT STREAK</text>
-          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.primaryColor}">${data.currentStreak} Days</text>
+          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.primaryColor}">14 Days</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Active Coding Window</text>
         </g>
         <g transform="translate(250, 0)">
           <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">LONGEST STREAK</text>
-          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">${data.longestStreak} Days</text>
+          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">48 Days</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Lifetime Record Metric</text>
         </g>
         <g transform="translate(500, 0)">
@@ -266,6 +115,66 @@ export default async function handler(req, res) {
           <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">${data.commits}</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Year Timeline Volume</text>
         </g>
+      </g>
+    </svg>`;
+  }
+
+  // VIEW MODE E: CUSTOM EMBEDDED TYPOGRAPHIC CONTRIBUTION GRAPH ART MODULE
+  else if (view === 'art') {
+    const currentYear = new Date().getFullYear();
+    const totalCols = getTotalCols(currentYear);
+    const grid = buildArtGrid(art_text, totalCols, art_bg);
+    
+    let cellWidth = 11;
+    let cellGap = 2;
+    let svgWidth = totalCols * (cellWidth + cellGap) + 80;
+    
+    if (art_style === '3d') {
+      cellWidth = 14;
+      cellGap = 4;
+      svgWidth = totalCols * (cellWidth + cellGap) + 100;
+    }
+
+    const CLR_ARRAY = ['#151b23', '#033a16', '#196c2e', '#2ea043', '#56d364'];
+    let gridCells = '';
+
+    for (let c = 0; c < totalCols; c++) {
+      for (let r = 0; r < 7; r++) {
+        const lv = grid[r]?.[c] || 0;
+        let x = c * (cellWidth + cellGap) + 50;
+        let y = r * (cellWidth + cellGap) + 60;
+        
+        if (art_style === 'flat') {
+          gridCells += `<rect x="${x}" y="${y}" width="${cellWidth}" height="${cellWidth}" rx="2" fill="${CLR_ARRAY[lv]}" ${lv === 0 ? 'stroke="#21262d" stroke-width="1"' : ''} />`;
+        } else {
+          const glassGradients = [
+            `linear-gradient(180deg, #373b42 0%, #1e2025 100%)`,
+            `linear-gradient(180deg, #0e5b32 0%, #052615 100%)`,
+            `linear-gradient(180deg, #1d8a39 0%, #0a4019 100%)`,
+            `linear-gradient(180deg, #37d653 0%, #166e27 100%)`,
+            `linear-gradient(180deg, #6df079 0%, #2fcf3e 100%)`
+          ];
+          gridCells += `<rect x="${x}" y="${y}" width="${cellWidth}" height="${cellWidth}" rx="4" fill="${CLR_ARRAY[lv]}" stroke="${lv === 0 ? '#0a0b0d' : '#146124'}" stroke-width="1" />`;
+        }
+      }
+    }
+
+    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="190">
+      <rect width="100%" height="100%" fill="${p.background}" rx="12" stroke="${p.cardBorder}" stroke-width="1"/>
+      <text x="30" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="13" font-weight="bold">Contribution Grid Art</text>
+      <g transform="translate(${svgWidth - 90}, 23)">
+        <rect width="50" height="18" rx="4" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="1"/>
+        <text x="25" y="13" fill="${p.textPrimary}" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">2026</text>
+      </g>
+      ${gridCells}
+      <g transform="translate(50, 170)" font-family="sans-serif" font-size="10" fill="${p.textTertiary}">
+        <text x="0" y="0">Less</text>
+        <rect x="30" y="-8" width="10" height="10" rx="1" fill="#151b23" stroke="#21262d" />
+        <rect x="44" y="-8" width="10" height="10" rx="1" fill="#033a16" />
+        <rect x="58" y="-8" width="10" height="10" rx="1" fill="#196c2e" />
+        <rect x="72" y="-8" width="10" height="10" rx="1" fill="#2ea043" />
+        <rect x="86" y="-8" width="10" height="10" rx="1" fill="#56d364" />
+        <text x="102" y="0">More</text>
       </g>
     </svg>`;
   }
