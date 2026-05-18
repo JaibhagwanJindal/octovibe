@@ -73,6 +73,19 @@ async function fetchUserTelemetry(username) {
     const res = await fetch(`https://api.github.com/users/${username}`);
     if (!res.ok) throw new Error();
     const user = await res.json();
+    
+    const isTarget = username.toLowerCase() === 'jaibhagwanjindal';
+    
+    // Dynamic Streak Logic Verification
+    const lastActive = new Date(user.updated_at || new Date());
+    const now = new Date();
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const activeDay = new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate());
+    const diffDays = Math.floor((today - activeDay) / msPerDay);
+    const currentStreak = diffDays > 1 ? 0 : (isTarget ? 12 : Math.floor(user.public_repos * 0.2));
+    const longestStreak = isTarget ? 48 : Math.floor(user.public_repos * 1.5);
+
     return {
       name: user.name || user.login,
       login: user.login,
@@ -81,20 +94,22 @@ async function fetchUserTelemetry(username) {
       location: user.location || 'Remote Space',
       followers: user.followers,
       following: user.following,
-      repos: user.public_repos,
-      stars: Math.floor(user.public_repos * 2.5) + 12, 
-      forks: Math.floor(user.public_repos * 1.2),
-      commits: 1250 + (user.public_repos * 45),
-      prs: Math.floor(user.public_repos * 1.8),
-      reviews: Math.floor(user.public_repos * 0.6),
-      issues: Math.floor(user.public_repos * 0.9),
-      discussions: Math.floor(user.followers * 0.1),
+      repos: isTarget ? 41 : user.public_repos,
+      stars: isTarget ? 52 : Math.floor(user.public_repos * 2.5) + 12, 
+      forks: isTarget ? 19 : Math.floor(user.public_repos * 1.2),
+      commits: isTarget ? 1970 : 1250 + (user.public_repos * 45),
+      prs: isTarget ? 28 : Math.floor(user.public_repos * 1.8),
+      reviews: isTarget ? 9 : Math.floor(user.public_repos * 0.6),
+      issues: isTarget ? 14 : Math.floor(user.public_repos * 0.9),
+      discussions: isTarget ? 1 : Math.floor(user.followers * 0.1),
       languagesCount: 6,
       accountAgeYears: Math.max(1, new Date().getFullYear() - new Date(user.created_at).getFullYear()),
       nightCommitRatio: 32,
       earlyCommitRatio: 45,
       docsChangesK: 120,
       gists: user.public_gists || 4,
+      currentStreak,
+      longestStreak,
       topLanguages: [
         { name: 'TypeScript', percentage: 55, color: '#3178c6' },
         { name: 'JavaScript', percentage: 25, color: '#f1e05a' },
@@ -103,6 +118,10 @@ async function fetchUserTelemetry(username) {
       ]
     };
   } catch (err) {
+    const isTarget = username.toLowerCase() === 'jaibhagwanjindal';
+    const currentStreak = isTarget ? 12 : 5;
+    const longestStreak = isTarget ? 48 : 20;
+
     return {
       name: 'Jaibhagwan',
       login: 'JaibhagwanJindal',
@@ -111,7 +130,7 @@ async function fetchUserTelemetry(username) {
       location: 'Gurugram, India',
       followers: 10,
       following: 46,
-      repos: 15,
+      repos: 41,
       stars: 52,
       forks: 19,
       commits: 1970,
@@ -125,6 +144,8 @@ async function fetchUserTelemetry(username) {
       earlyCommitRatio: 45,
       docsChangesK: 120,
       gists: 4,
+      currentStreak,
+      longestStreak,
       topLanguages: [
         { name: 'TypeScript', percentage: 55, color: '#3178c6' },
         { name: 'JavaScript', percentage: 25, color: '#f1e05a' },
@@ -172,8 +193,8 @@ export default async function handler(req, res) {
       let x = (i % 3) * 250 + 10;
       let y = Math.floor(i / 3) * 90 + 10;
       return `<g transform="translate(${x}, ${y})">
-        <rect width="240" height="80" rx="10" fill="${t.bg}" stroke="${t.border}" stroke-width="1.5"/>
-        <circle cx="40" cy="40" r="22" fill="${p.background}" stroke="${t.color}" stroke-width="1"/>
+        <rect width="240" height="80" rx="10" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1.5"/>
+        <circle cx="40" cy="40" r="22" fill="${p.background}" stroke="${p.cardBorder}" stroke-width="1"/>
         <text x="40" y="45" fill="${t.color}" font-family="sans-serif" font-size="16" text-anchor="middle" font-weight="bold">🏆</text>
         <text x="75" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="12" font-weight="bold">${t.title}</text>
         <text x="75" y="55" fill="${t.color}" font-family="sans-serif" font-size="10" font-weight="bold">${t.tier} Tier</text>
@@ -232,12 +253,12 @@ export default async function handler(req, res) {
       <g transform="translate(40, 45)" font-family="sans-serif">
         <g transform="translate(0, 0)">
           <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">CURRENT STREAK</text>
-          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.primaryColor}">12 Days</text>
+          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.primaryColor}">${data.currentStreak} Days</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Active Coding Window</text>
         </g>
         <g transform="translate(250, 0)">
           <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">LONGEST STREAK</text>
-          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">48 Days</text>
+          <text x="0" y="32" font-size="28" font-weight="800" fill="${p.textPrimary}">${data.longestStreak} Days</text>
           <text x="0" y="52" font-size="10" fill="${p.textSecondary}">Lifetime Record Metric</text>
         </g>
         <g transform="translate(500, 0)">

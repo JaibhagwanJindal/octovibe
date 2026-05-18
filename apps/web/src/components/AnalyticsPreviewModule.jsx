@@ -124,8 +124,8 @@ export default function AnalyticsPreviewModule({ username }) {
                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Earned Profile Trophies</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {trophies.map((t, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl border shadow-sm transition-transform hover:scale-[1.01]" style={{ backgroundColor: t.bg, borderColor: t.border }}>
-                      <div className="w-10 h-10 rounded-full bg-[#010409] border border-white/5 flex items-center justify-center text-sm" style={{ color: t.color }}>
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl border shadow-sm transition-transform hover:scale-[1.01]" style={{ backgroundColor: p.cardBg, borderColor: p.cardBorder }}>
+                      <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-lg" style={{ color: t.color }}>
                         <i className={`fas ${t.icon}`} />
                       </div>
                       <div>
@@ -189,12 +189,12 @@ export default function AnalyticsPreviewModule({ username }) {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl border bg-black/20" style={{ borderColor: p.cardBorder }}>
                     <p className="text-[10px] font-bold text-gray-500 uppercase">Current Session Streak</p>
-                    <p className="text-2xl font-black font-mono mt-1" style={{ color: p.primaryColor }}>12 Days</p>
+                    <p className="text-2xl font-black font-mono mt-1" style={{ color: p.primaryColor }}>{profile.currentStreak} Days</p>
                     <p className="text-[11px] text-gray-400 mt-1">Ongoing active daily adjustments</p>
                   </div>
                   <div className="p-4 rounded-xl border bg-black/20" style={{ borderColor: p.cardBorder }}>
                     <p className="text-[10px] font-bold text-gray-500 uppercase">Longest Metric Record</p>
-                    <p className="text-2xl font-black font-mono text-white mt-1">48 Days</p>
+                    <p className="text-2xl font-black font-mono text-white mt-1">{profile.longestStreak} Days</p>
                     <p className="text-[11px] text-gray-400 mt-1">Lifetime historic sequence boundary</p>
                   </div>
                   <div className="p-4 rounded-xl border bg-black/20" style={{ borderColor: p.cardBorder }}>
