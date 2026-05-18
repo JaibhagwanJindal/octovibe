@@ -14,8 +14,8 @@ export default function App() {
   const [heroLayout, setHeroLayout] = useState('minimalist');
   const [langLayout, setLangLayout] = useState('pipeline');
 
-  const [artTitle, setArtTitle] = useState('OCTOVIBE VISUALS');
-  const [artText, setArtText] = useState('CONNECTED');
+  const [artTitle, setArtTitle] = useState('JAIBHAGWAN JINDAL');
+  const [artText, setArtText] = useState('JAIBHAGWAN');
   const [artStyle, setArtStyle] = useState('flat');
   const [artBg, setArtBg] = useState('0');
 
@@ -41,18 +41,38 @@ export default function App() {
     localStorage.removeItem('octovibe_user');
     setToken('');
     setUsername('JaibhagwanJindal');
+    setProfile(null);
   };
 
   useEffect(() => {
-    // Parse URL code search blocks for completed authorization code variables
     const params = new URLSearchParams(window.location.search);
     const authCode = params.get('code');
+
     if (authCode) {
-      // Simulate rapid exchange verification loop sequence
-      localStorage.setItem('octovibe_token', 'mock_secure_user_token');
-      localStorage.setItem('octovibe_user', 'JaibhagwanJindal');
-      setToken('mock_secure_user_token');
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Execute live background exchange across the secure Vercel gateway route
+      fetch('https://octovibe.vercel.app/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: authCode })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.access_token) {
+            localStorage.setItem('octovibe_token', data.access_token);
+            // Query user handle info instantly using the freshly acquired token credentials
+            fetch('https://api.github.com/user', {
+              headers: { 'Authorization': `token ${data.access_token}` }
+            })
+              .then(r => r.json())
+              .then(userData => {
+                localStorage.setItem('octovibe_user', userData.login);
+                setToken(data.access_token);
+                setUsername(userData.login);
+                window.history.replaceState({}, document.title, window.location.pathname);
+              });
+          }
+        })
+        .catch(err => console.error('SaaS Token authorization pipeline handshake error:', err));
     }
   }, []);
 
@@ -78,7 +98,7 @@ export default function App() {
 
   if (!profile) return (
     <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono animate-pulse">
-      Authorizing multi-tenant workspace nodes...
+      Synchronizing multi-tenant identity profile matrix...
     </div>
   );
 
@@ -101,7 +121,7 @@ export default function App() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#388bfd] to-[#238636] flex items-center justify-center font-black text-white">🐙</div>
             <div>
               <h1 className="text-sm font-bold text-white">OctoVibe Portal</h1>
-              <p className="text-[10px] text-gray-500 uppercase font-black">SaaS Multi-Tenant</p>
+              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">SaaS Edition</p>
             </div>
           </div>
 
@@ -109,15 +129,15 @@ export default function App() {
             {/* SaaS Authentication Trigger Buttons */}
             {!token ? (
               <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-colors">
-                <i className="fab fa-github text-sm"></i> Login with GitHub
+                <i className="fab fa-github text-sm"></i> Connect GitHub Account
               </button>
             ) : (
               <div className="bg-black/20 border border-[#30363d] p-2.5 rounded-lg flex items-center justify-between">
                 <div className="truncate">
-                  <p className="text-[9px] uppercase font-bold text-gray-500">Logged in as</p>
-                  <p className="text-xs font-mono font-bold text-white truncate">@{username}</p>
+                  <p className="text-[9px] uppercase font-bold text-gray-500">Active Tenant Session</p>
+                  <p className="text-xs font-mono font-bold text-[#58a6ff] truncate">@{username}</p>
                 </div>
-                <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-red-300 bg-red-500/5 px-2 py-1 rounded border border-red-500/10 transition-colors">Logout</button>
+                <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-red-300 bg-red-500/5 px-2 py-1 rounded border border-red-500/10 transition-colors">Disconnect</button>
               </div>
             )}
 
@@ -153,7 +173,7 @@ export default function App() {
             </div>
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
-              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Art Canvas Controls</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Customizer</label>
               <input type="text" value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text String (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <div className="grid grid-cols-2 gap-1.5">
@@ -180,7 +200,7 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Multi-Tenant Platform</div>
+        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Hub • SaaS Production</div>
       </aside>
 
       {/* CONTINUOUS PREVIEW CANVAS TIMELINE STREAM */}
