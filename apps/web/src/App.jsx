@@ -4,33 +4,31 @@ import { getThemes } from '@octovibe/themes';
 
 export default function App() {
   const currentYear = new Date().getFullYear();
-  const themesList = getThemes();
+  const themesList  = getThemes();
 
-  // SaaS Multi-Tenant Authentication Sessions Initialization
-  const [token, setToken] = useState(localStorage.getItem('octovibe_token') || '');
-  const [username, setUsername] = useState(localStorage.getItem('octovibe_user') || 'octovibe');
+  const [token,    setToken]    = useState(localStorage.getItem('octovibe_token') || '');
+  const [username, setUsername] = useState(localStorage.getItem('octovibe_user')  || 'octovibe');
 
   const [activeTheme, setActiveTheme] = useState('midnight-blue');
-  const [heroLayout, setHeroLayout] = useState('minimalist');
-  const [langLayout, setLangLayout] = useState('pipeline');
+  const [heroLayout,  setHeroLayout]  = useState('minimalist');
+  const [langLayout,  setLangLayout]  = useState('pipeline');
 
   const [artTitle, setArtTitle] = useState('OCTOVIBE VISUALS');
-  const [artText, setArtText] = useState('CONNECTED');
+  const [artText,  setArtText]  = useState('CONNECTED');
   const [artStyle, setArtStyle] = useState('flat');
-  const [artBg, setArtBg] = useState('0');
+  const [artBg,    setArtBg]    = useState('0');
 
-  const [visible, setVisible] = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true });
-  const [profile, setProfile] = useState(null);
-  const [trophies, setTrophies] = useState([]);
+  const [visible,      setVisible]      = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true });
+  const [profile,      setProfile]      = useState(null);
+  const [trophies,     setTrophies]     = useState([]);
   const [renderedGrid, setRenderedGrid] = useState([]);
-  const [artCommits, setArtCommits] = useState(0);
-  const [copiedIndex, setCopiedIndex] = useState(null);
+  const [artCommits,   setArtCommits]   = useState(0);
+  const [copiedIndex,  setCopiedIndex]  = useState(null);
 
-  const CLR_MAP = ['#151b23', '#033a16', '#196c2e', '#2ea043', '#56d364'];
-  const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const CLR_MAP  = ['#151b23','#033a16','#196c2e','#2ea043','#56d364'];
+  const MONS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const totalCols = getTotalCols(currentYear);
 
-  // Trigger GitHub Authentication Redirect with secure app client context ID
   const triggerGitHubLogin = () => {
     const CLIENT_ID = 'Ov23li8kTznRESFil5bV';
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=read:user,repo`;
@@ -44,53 +42,49 @@ export default function App() {
     setProfile(null);
   };
 
-  // GitHub OAuth code exchange — POSTs to secure Vercel backend gateway (never exposes CLIENT_SECRET)
+  // OAuth code exchange via secure Vercel backend gateway
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params   = new URLSearchParams(window.location.search);
     const authCode = params.get('code');
+    if (!authCode) return;
 
-    if (authCode) {
-      fetch('https://octovibe.vercel.app/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: authCode })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.access_token) {
-            localStorage.setItem('octovibe_token', data.access_token);
-            fetch('https://api.github.com/user', {
-              headers: { 'Authorization': `token ${data.access_token}` }
-            })
-              .then(r => r.json())
-              .then(userData => {
-                localStorage.setItem('octovibe_user', userData.login);
-                setToken(data.access_token);
-                setUsername(userData.login);
-                window.history.replaceState({}, document.title, window.location.pathname);
-              });
-          }
+    fetch('https://octovibe.vercel.app/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: authCode })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!data.access_token) return;
+        localStorage.setItem('octovibe_token', data.access_token);
+        fetch('https://api.github.com/user', {
+          headers: { 'Authorization': `token ${data.access_token}` }
         })
-        .catch(err => console.error('SaaS OAuth Pipeline exchange exception failure:', err));
-    }
+          .then(r => r.json())
+          .then(userData => {
+            localStorage.setItem('octovibe_user', userData.login);
+            setToken(data.access_token);
+            setUsername(userData.login);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          });
+      })
+      .catch(err => console.error('SaaS Handshake error:', err));
   }, []);
 
-  // Fetch telemetry via backend proxy to avoid browser-level 403 GraphQL cross-origin rejections
+  // Fetch telemetry via backend proxy to avoid browser GraphQL 403 errors
   useEffect(() => {
     const reqHeaders = {};
-    if (token) {
-      reqHeaders['Authorization'] = `Bearer ${token}`;
-    }
+    if (token) reqHeaders['Authorization'] = `Bearer ${token}`;
 
     fetch(`https://octovibe.vercel.app/api/render?user=${username}&json=true`, { headers: reqHeaders })
-      .then(res => res.json())
+      .then(r => r.json())
       .then(resData => {
         if (resData.profile) {
           setProfile(resData.profile);
           setTrophies(resData.trophies || []);
         }
       })
-      .catch(err => console.error('Telemetry profile stream extraction failed:', err));
+      .catch(err => console.error('Telemetry fetch error:', err));
   }, [username, token]);
 
   useEffect(() => {
@@ -99,7 +93,7 @@ export default function App() {
     let commits = 0;
     for (let r = 0; r < 7; r++) {
       for (let c = 0; c < totalCols; c++) {
-        let lv = gridData[r]?.[c] ?? 0;
+        const lv = gridData[r]?.[c] ?? 0;
         commits += lv === 4 ? 5 : lv;
       }
     }
@@ -108,15 +102,15 @@ export default function App() {
 
   if (!profile) return (
     <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono animate-pulse">
-      Routing live data queries through core SaaS proxy lines...
+      Syncing pipeline configuration arrays via secure Vercel edge proxy...
     </div>
   );
 
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
 
   const triggerCopy = (viewMode, idx, extra = '') => {
-    const targetUrl = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${profile.login}&theme=${activeTheme}&view=${viewMode}${extra})`;
-    navigator.clipboard.writeText(targetUrl);
+    const url = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${profile.login}&theme=${activeTheme}&view=${viewMode}${extra})`;
+    navigator.clipboard.writeText(url);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
@@ -124,7 +118,7 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[#010409] text-gray-300 font-sans antialiased overflow-hidden select-none">
 
-      {/* SIDEBAR DASHBOARD CONSOLE PANEL */}
+      {/* SIDEBAR */}
       <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
@@ -137,7 +131,7 @@ export default function App() {
 
           <div className="space-y-3">
             {!token ? (
-              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-colors">
+              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
                 <i className="fab fa-github text-sm"></i> Connect GitHub Account
               </button>
             ) : (
@@ -165,7 +159,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Component Layout</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Layout</label>
               <select value={heroLayout} onChange={e => setHeroLayout(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md p-1.5 text-xs text-white outline-none">
                 <option value="minimalist">Ultra-Minimalist Profile</option>
                 <option value="terminal">Cyber-Terminal Console</option>
@@ -174,7 +168,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Language Component Architecture</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Language Architecture</label>
               <select value={langLayout} onChange={e => setLangLayout(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md p-1.5 text-xs text-white outline-none">
                 <option value="pipeline">Continuous Pipeline Bar</option>
                 <option value="grid">Isolate Categorized Badges</option>
@@ -182,7 +176,7 @@ export default function App() {
             </div>
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
-              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Art</label>
               <input type="text" value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <div className="grid grid-cols-2 gap-1.5">
@@ -194,13 +188,12 @@ export default function App() {
                   <option value="0">Shade 0</option>
                   <option value="1">Shade 1</option>
                   <option value="2">Shade 2</option>
-                  <option value="random">Scramble</option>
                 </select>
               </div>
             </div>
 
             <div className="border-t border-[#21262d] pt-3">
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1.5">Active Sections Visibility</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1.5">Section Visibility</label>
               <div className="grid grid-cols-2 gap-1">
                 {Object.keys(visible).map(key => (
                   <button key={key} onClick={() => setVisible(v => ({ ...v, [key]: !v[key] }))} className={`py-1 rounded text-[9px] font-bold uppercase border transition-all ${visible[key] ? 'bg-emerald-950/40 text-emerald-400 border-emerald-500/20' : 'bg-transparent text-gray-600 border-transparent'}`}>{key}</button>
@@ -212,13 +205,11 @@ export default function App() {
         <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Studio Hub • SaaS Production</div>
       </aside>
 
-      {/* STACKED LIVE WORKSPACE PREVIEW STREAM */}
+      {/* MAIN CANVAS */}
       <main className="flex-1 overflow-y-auto p-10 space-y-6">
-
         <div className="p-8 rounded-xl border select-text" style={{ backgroundColor: p.background, borderColor: p.cardBorder }}>
           <div className="w-full space-y-8 max-w-[740px] mx-auto">
 
-            {/* MODULE 1: HERO PROFILE LAYOUT */}
             {visible.hero && (
               <div className="w-full">
                 {heroLayout === 'minimalist' && (
@@ -248,19 +239,17 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 2: REAL ACCOUNT TELEMETRY DATA STATS */}
             {visible.metrics && (
               <div className="grid grid-cols-4 gap-4 w-full">
                 {[
-                  { label: 'Repositories', val: profile.repos, icon: 'fa-book-bookmark' },
-                  { label: 'Total Stars', val: profile.stars, icon: 'fa-star' },
-                  { label: 'Contributions', val: profile.commits, icon: 'fa-cubes' },
-                  { label: 'Followers', val: profile.followers, icon: 'fa-users' }
+                  { label: 'Repositories', val: profile.repos,      icon: 'fa-book-bookmark' },
+                  { label: 'Total Stars',  val: profile.stars,      icon: 'fa-star' },
+                  { label: 'Contributions',val: profile.commits,    icon: 'fa-cubes' },
+                  { label: 'Followers',    val: profile.followers,  icon: 'fa-users' }
                 ].map((s, idx) => (
                   <div className="p-4 rounded-xl border" key={idx} style={{ backgroundColor: p.cardBg, borderColor: p.cardBorder }}>
                     <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase mb-1">
-                      <span>{s.label}</span>
-                      <i className={`fas ${s.icon}`} style={{ color: p.primaryColor }} />
+                      <span>{s.label}</span><i className={`fas ${s.icon}`} style={{ color: p.primaryColor }} />
                     </div>
                     <p className="text-2xl font-black text-white font-mono">{s.val}</p>
                   </div>
@@ -268,7 +257,6 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 3: TELEMETRY ENGINE STREAK TILES */}
             {visible.streak && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Telemetry Consistency Engine</h4>
@@ -289,7 +277,6 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 4: LANGUAGE FINGERPRINT CHART */}
             {visible.languages && profile.topLanguages && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Language Fingerprint Matrix</h4>
@@ -308,7 +295,6 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 5: THEMED BADGES MATRIX SHELF */}
             {visible.trophies && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Earned Platform Rewards</h4>
@@ -328,7 +314,6 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 6: CONTRIBUTION GRAPH PATTERN COMPONENT */}
             {visible.art && (
               <div className="w-full overflow-hidden">
                 <div id={artStyle === 'flat' ? 'flatCanvas' : 'threeDCanvas'} className="p-5 rounded-xl border shadow-xl bg-[#0d1117] w-full border-[#30363d]">
@@ -336,7 +321,6 @@ export default function App() {
                     <h4 className="text-xs font-bold text-gray-300">Contribution Grid Art — <span className="text-[#56d364] font-black">{artTitle}</span></h4>
                     <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1f3456] text-[#58a6ff] border border-[#388bfd] rounded">2026</span>
                   </div>
-
                   <div className="w-full overflow-x-auto">
                     <div className="w-full flex flex-col gap-1 select-none">
                       <div className="flex h-5 relative text-[9px] text-gray-400 font-bold mb-1 pl-8 w-full">
@@ -356,10 +340,9 @@ export default function App() {
                                 const lv = renderedGrid[rIdx]?.[cIdx] ?? 0;
                                 if (artStyle === 'flat') {
                                   return <div key={rIdx} className="aspect-square w-full rounded-[1.5px]" style={{ backgroundColor: CLR_MAP[lv], border: lv === 0 ? '1px solid #21262d' : 'none' }} />;
-                                } else {
-                                  const glassGlows = ["from-[#373b42] to-[#1e2025] border-[#0a0b0d]", "from-[#0e5b32] to-[#052615] border-[#02120a]", "from-[#1d8a39] to-[#0a4019] border-[#04210d]", "from-[#37d653] to-[#166e27] border-[#093311]", "from-[#6df079] to-[#2fcf3e] border-[#146124] shadow-[0_2px_6px_rgba(109,240,121,0.5)]"];
-                                  return <div key={rIdx} className={`aspect-square w-full rounded-[2.5px] border bg-gradient-to-b ${glassGlows[lv]}`} />;
                                 }
+                                const glassGlows = ["from-[#373b42] to-[#1e2025] border-[#0a0b0d]","from-[#0e5b32] to-[#052615] border-[#02120a]","from-[#1d8a39] to-[#0a4019] border-[#04210d]","from-[#37d653] to-[#166e27] border-[#093311]","from-[#6df079] to-[#2fcf3e] border-[#146124] shadow-[0_2px_6px_rgba(109,240,121,0.5)]"];
+                                return <div key={rIdx} className={`aspect-square w-full rounded-[2.5px] border bg-gradient-to-b ${glassGlows[lv]}`} />;
                               })}
                             </div>
                           ))}
@@ -367,9 +350,8 @@ export default function App() {
                       </div>
                     </div>
                   </div>
-
                   <div className="mt-4 flex items-center justify-between text-[10px] text-gray-400">
-                    <span><b>{artCommits}</b> commits required to build this typography layout matrix.</span>
+                    <span><b>{artCommits}</b> commits required to forge this layout profile blueprint array stack.</span>
                     <div className="flex items-center gap-1">
                       <span className="text-[9px] mr-1">Less</span>
                       {CLR_MAP.map((c, i) => <div key={i} className="w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: c, border: i === 0 ? '1px solid #21262d' : 'none' }} />)}
@@ -383,7 +365,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* EMBED CODE PRODUCTION MARKDOWN SNIPPET REGISTRY */}
         <div className="bg-[#0d1117] border border-[#30363d] rounded-xl p-5 space-y-3 shadow-xl select-text">
           <div>
             <h3 className="text-sm font-bold text-white">Production Embed Code Generation Registry</h3>
@@ -391,11 +372,11 @@ export default function App() {
           </div>
           <div className="space-y-2">
             {[
-              { label: "Complete Identity Suite Snippet", t: "all", ext: `&hero_layout=${heroLayout}` },
-              { label: "14+ Gamified Trophy Panel Matrix", t: "trophies", ext: '' },
-              { label: "Dynamic Language Fingerprint Chart", t: "languages", ext: `&lang_layout=${langLayout}` },
-              { label: "Consistency Streak Counter Block", t: "streak", ext: '' },
-              { label: "Custom Typographic Contribution Grid Art", t: "art", ext: `&art_text=${artText}&art_style=${artStyle}&art_bg=${artBg}` }
+              { label: "Complete Identity Suite Snippet",      t: "all",      ext: `&hero_layout=${heroLayout}` },
+              { label: "14+ Gamified Trophy Panel Matrix",     t: "trophies", ext: '' },
+              { label: "Dynamic Language Fingerprint Chart",   t: "languages",ext: `&lang_layout=${langLayout}` },
+              { label: "Consistency Streak Counter Block",     t: "streak",   ext: '' },
+              { label: "Custom Typographic Contribution Grid Art", t: "art",  ext: `&art_text=${artText}&art_style=${artStyle}&art_bg=${artBg}` }
             ].map((item, idx) => {
               const str = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${profile.login}&theme=${activeTheme}&view=${item.t}${item.ext})`;
               return (
@@ -405,14 +386,13 @@ export default function App() {
                   </span>
                   <input type="text" readOnly value={str} className="flex-1 w-full bg-[#010409] border border-[#30363d] rounded p-2 text-[10px] font-mono text-gray-500 outline-none" />
                   <button onClick={() => triggerCopy(item.t, idx, item.ext)} className="bg-[#21262d] hover:bg-[#30363d] text-white px-4 py-1.5 rounded text-xs font-bold transition-all min-w-[100px]">
-                    {copiedIndex === idx ? "✓ Copied!" : "Copy Snippet"}
+                    {copiedIndex === idx ? '✓ Copied!' : 'Copy Snippet'}
                   </button>
                 </div>
               );
             })}
           </div>
         </div>
-
       </main>
     </div>
   );
