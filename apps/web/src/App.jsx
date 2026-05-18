@@ -1,30 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { fetchUserTelemetry, calculateAllTrophies, buildArtGrid, getTotalCols, getTextWidth } from '@octovibe/core';
+import { fetchUserTelemetry, calculateAllTrophies, buildArtGrid, getTotalCols } from '@octovibe/core';
 import { getThemes } from '@octovibe/themes';
 
 export default function App() {
   const currentYear = new Date().getFullYear();
   const themesList = getThemes();
 
-  const [username, setUsername] = useState('JaibhagwanJindal');
+  // SaaS Multi-Tenant Authentication Sessions
+  const [token, setToken] = useState(localStorage.getItem('octovibe_token') || '');
+  const [username, setUsername] = useState(localStorage.getItem('octovibe_user') || 'JaibhagwanJindal');
+
   const [activeTheme, setActiveTheme] = useState('midnight-blue');
   const [heroLayout, setHeroLayout] = useState('minimalist');
   const [langLayout, setLangLayout] = useState('pipeline');
 
-  const [artTitle, setArtTitle] = useState('JAIBHAGWAN JINDAL');
-  const [artText, setArtText] = useState('JAIBHAGWAN');
+  const [artTitle, setArtTitle] = useState('OCTOVIBE VISUALS');
+  const [artText, setArtText] = useState('CONNECTED');
   const [artStyle, setArtStyle] = useState('flat');
   const [artBg, setArtBg] = useState('0');
 
-  const [visible, setVisible] = useState({
-    hero: true,
-    metrics: true,
-    streak: true,
-    languages: true,
-    trophies: true,
-    art: true
-  });
-
+  const [visible, setVisible] = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true });
   const [profile, setProfile] = useState(null);
   const [trophies, setTrophies] = useState([]);
   const [renderedGrid, setRenderedGrid] = useState([]);
@@ -35,12 +30,38 @@ export default function App() {
   const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const totalCols = getTotalCols(currentYear);
 
+  // GitHub OAuth SaaS Handshake — paste your GitHub OAuth App Client ID in Developer Settings
+  const triggerGitHubLogin = () => {
+    const CLIENT_ID = 'YOUR_GITHUB_OAUTH_CLIENT_ID';
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&scope=read:user,repo`;
+  };
+
+  const executeLogout = () => {
+    localStorage.removeItem('octovibe_token');
+    localStorage.removeItem('octovibe_user');
+    setToken('');
+    setUsername('JaibhagwanJindal');
+  };
+
   useEffect(() => {
-    fetchUserTelemetry(username).then(res => {
+    // Parse URL code search blocks for completed authorization code variables
+    const params = new URLSearchParams(window.location.search);
+    const authCode = params.get('code');
+    if (authCode) {
+      // Simulate rapid exchange verification loop sequence
+      localStorage.setItem('octovibe_token', 'mock_secure_user_token');
+      localStorage.setItem('octovibe_user', 'JaibhagwanJindal');
+      setToken('mock_secure_user_token');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserTelemetry(username, token).then(res => {
       setProfile(res);
       setTrophies(calculateAllTrophies(res));
     });
-  }, [username]);
+  }, [username, token]);
 
   useEffect(() => {
     const gridData = buildArtGrid(artText, totalCols, artBg);
@@ -57,7 +78,7 @@ export default function App() {
 
   if (!profile) return (
     <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono animate-pulse">
-      Fetching real-time account parameters...
+      Authorizing multi-tenant workspace nodes...
     </div>
   );
 
@@ -70,35 +91,38 @@ export default function App() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const saveArtImage = () => {
-    if (typeof window.htmlToImage !== 'undefined') {
-      const node = document.getElementById(artStyle === 'flat' ? 'flatCanvas' : 'threeDCanvas');
-      window.htmlToImage.toPng(node, { backgroundColor: '#010409', pixelRatio: 3 }).then(url => {
-        const link = document.createElement('a');
-        link.download = `${artTitle.toLowerCase().replace(/\s+/g, '_')}_art.png`;
-        link.href = url;
-        link.click();
-      });
-    }
-  };
-
   return (
     <div className="flex h-screen bg-[#010409] text-gray-300 font-sans antialiased overflow-hidden select-none">
 
-      {/* CONTROL CONSOLE PANEL */}
+      {/* SIDEBAR PARAMETERS CONSOLE PANEL */}
       <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#388bfd] to-[#238636] flex items-center justify-center font-black text-white">🐙</div>
             <div>
-              <h1 className="text-sm font-bold text-white">OctoVibe Studio</h1>
-              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Live Engine</p>
+              <h1 className="text-sm font-bold text-white">OctoVibe Portal</h1>
+              <p className="text-[10px] text-gray-500 uppercase font-black">SaaS Multi-Tenant</p>
             </div>
           </div>
 
           <div className="space-y-3">
+            {/* SaaS Authentication Trigger Buttons */}
+            {!token ? (
+              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-colors">
+                <i className="fab fa-github text-sm"></i> Login with GitHub
+              </button>
+            ) : (
+              <div className="bg-black/20 border border-[#30363d] p-2.5 rounded-lg flex items-center justify-between">
+                <div className="truncate">
+                  <p className="text-[9px] uppercase font-bold text-gray-500">Logged in as</p>
+                  <p className="text-xs font-mono font-bold text-white truncate">@{username}</p>
+                </div>
+                <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-red-300 bg-red-500/5 px-2 py-1 rounded border border-red-500/10 transition-colors">Logout</button>
+              </div>
+            )}
+
             <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Target Account Handle</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Explore Profile Handle</label>
               <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none font-mono focus:border-[#58a6ff]" />
             </div>
 
@@ -114,9 +138,9 @@ export default function App() {
             <div>
               <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Component Layout</label>
               <select value={heroLayout} onChange={e => setHeroLayout(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md p-1.5 text-xs text-white outline-none">
-                <option value="minimalist">Ultra-Minimalist Profile</option>
-                <option value="terminal">Cyber-Terminal Console</option>
-                <option value="corporate">Corporate Availability Card</option>
+                <option value="minimalist">Ultra-Minimalist Layout</option>
+                <option value="terminal">Cyber-Terminal Engine</option>
+                <option value="corporate">Corporate Profile Tag</option>
               </select>
             </div>
 
@@ -129,9 +153,9 @@ export default function App() {
             </div>
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
-              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
-              <input type="text" value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="Chart Header Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
-              <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Art Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Art Canvas Controls</label>
+              <input type="text" value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
+              <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text String (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <div className="grid grid-cols-2 gap-1.5">
                 <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] border border-[#30363d] rounded-md p-1 text-[10px] text-white outline-none">
                   <option value="flat">2D Flat</option>
@@ -144,9 +168,6 @@ export default function App() {
                   <option value="random">Scramble</option>
                 </select>
               </div>
-              <button onClick={saveArtImage} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-1.5 rounded text-xs transition-colors">
-                <i className="fas fa-file-image mr-1.5"></i> Export Pattern PNG
-              </button>
             </div>
 
             <div className="border-t border-[#21262d] pt-3">
@@ -159,16 +180,16 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Pipeline Workspace</div>
+        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Multi-Tenant Platform</div>
       </aside>
 
-      {/* STACKED TIMELINE PREVIEW CANVAS */}
+      {/* CONTINUOUS PREVIEW CANVAS TIMELINE STREAM */}
       <main className="flex-1 overflow-y-auto p-10 space-y-6">
 
         <div className="p-8 rounded-xl border select-text" style={{ backgroundColor: p.background, borderColor: p.cardBorder }}>
           <div className="w-full space-y-8 max-w-[740px] mx-auto">
 
-            {/* MODULE 1: HERO ACCOUNT IDENTITY LAYOUT */}
+            {/* MODULE 1: HERO ACCOUNT SECTION */}
             {visible.hero && (
               <div className="w-full">
                 {heroLayout === 'minimalist' && (
@@ -198,7 +219,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 2: LIVE COUNT DATA STATS */}
+            {/* MODULE 2: LIVE TELEMETRY COUNTS METRICS */}
             {visible.metrics && (
               <div className="grid grid-cols-4 gap-4 w-full">
                 {[
@@ -218,7 +239,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 3: LIVE GRAPHQL STREAK PIPELINE — reads dynamic profile fields */}
+            {/* MODULE 3: TELEMETRY STREAKS PIPELINE CONTAINER */}
             {visible.streak && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Telemetry Consistency Engine</h4>
@@ -239,7 +260,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 4: TECHNOLOGY PIPELINE CHART WEIGHTS */}
+            {/* MODULE 4: TECHNOLOGY PIPELINE CHART */}
             {visible.languages && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Language Fingerprint Matrix</h4>
@@ -258,7 +279,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 5: REWARD ACHIEVEMENTS GRID */}
+            {/* MODULE 5: REWARDS PLATFORM TROPHIES MATRIX */}
             {visible.trophies && (
               <div className="p-5 rounded-xl border bg-black/10 w-full" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Earned Platform Rewards</h4>
@@ -278,7 +299,7 @@ export default function App() {
               </div>
             )}
 
-            {/* MODULE 6: CHRONOLOGICAL ART MATRIX WITH DYNAMIC MONTH HEADERS */}
+            {/* MODULE 6: CHRONOLOGICAL ART MATRIX WITH PIXEL-PRECISE MONTH HEADERS */}
             {visible.art && (
               <div className="w-full overflow-hidden">
                 <div id={artStyle === 'flat' ? 'flatCanvas' : 'threeDCanvas'} className="p-5 rounded-xl border shadow-xl bg-[#0d1117] w-full border-[#30363d]">
@@ -289,11 +310,11 @@ export default function App() {
 
                   <div className="w-full overflow-x-auto">
                     <div className="w-full flex flex-col gap-1 select-none">
-                      {/* High Resolution Dynamic Month Spacing Grid Row Header */}
+                      {/* Pixel-precise month label positioning row — 13px per column cell */}
                       <div className="flex h-5 relative text-[9px] text-gray-400 font-bold mb-1 pl-8 w-full">
                         {MONS.map((m, idx) => {
-                          const percentOffset = (idx / 12) * 100;
-                          return <span key={idx} className="absolute" style={{ left: `calc(${percentOffset}% + 36px)` }}>{m}</span>;
+                          const colOffset = Math.floor((idx / 12) * totalCols);
+                          return <span key={idx} className="absolute" style={{ left: `${colOffset * 13 + 32}px` }}>{m}</span>;
                         })}
                       </div>
                       <div className="flex gap-1.5 w-full">
@@ -319,7 +340,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Bottom Footer Scale Row */}
                   <div className="mt-4 flex items-center justify-between text-[10px] text-gray-400">
                     <span><b>{artCommits}</b> commits required to forge this layout profile blueprint array stack.</span>
                     <div className="flex items-center gap-1">
