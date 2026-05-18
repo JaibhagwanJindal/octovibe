@@ -1,26 +1,21 @@
 export const TROPHY_TIERS = {
-  BRONZE: { label: 'Bronze', color: '#cd7f32', bg: '#1c120c', border: '#cd7f3244' },
-  SILVER: { label: 'Silver', color: '#c0c0c0', bg: '#1b1b1b', border: '#c0c0c044' },
-  GOLD: { label: 'Gold', color: '#ffd700', bg: '#242105', border: '#ffd70044' },
-  PLATINUM: { label: 'Platinum', color: '#e5e4e2', bg: '#16191d', border: '#e5e4e244' }
+  BRONZE: { label: 'Bronze', color: '#cd7f32', bg: '#1c120c', border: '#cd7f3233' },
+  SILVER: { label: 'Silver', color: '#c0c0c0', bg: '#1b1b1b', border: '#c0c0c033' },
+  GOLD: { label: 'Gold', color: '#ffd700', bg: '#242105', border: '#ffd70033' },
+  PLATINUM: { label: 'Platinum', color: '#e5e4e2', bg: '#16191d', border: '#e5e4e233' }
 };
 
 export function calculateAllTrophies(stats) {
   const achievements = [];
-
   const evaluate = (id, title, value, thresholds, icon) => {
     let tier = null;
     if (value >= thresholds.platinum) tier = TROPHY_TIERS.PLATINUM;
     else if (value >= thresholds.gold) tier = TROPHY_TIERS.GOLD;
     else if (value >= thresholds.silver) tier = TROPHY_TIERS.SILVER;
     else if (value >= thresholds.bronze) tier = TROPHY_TIERS.BRONZE;
-
-    if (tier) {
-      achievements.push({ id, title, value, ...tier, icon });
-    }
+    if (tier) achievements.push({ id, title, value, ...tier, icon });
   };
 
-  // 14 Core Telemetry Metrics Threshold Mapping
   evaluate('stars', 'Star Lord', stats.stars || 0, { bronze: 10, silver: 100, gold: 500, platinum: 1000 }, 'fa-star');
   evaluate('commits', 'Commit Monster', stats.commits || 0, { bronze: 100, silver: 1000, gold: 5000, platinum: 10000 }, 'fa-cubes');
   evaluate('repos', 'Prolific Creator', stats.repos || 0, { bronze: 5, silver: 20, gold: 50, platinum: 100 }, 'fa-book-bookmark');
