@@ -173,7 +173,7 @@ export default function App() {
   const displayBio = customBio || displayProfile.bio;
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
 
-  const getEmbedCode = (type, baseUrl) => {
+  const getEmbedUrl = (type, baseUrl) => {
     let ext = '';
     const bioQuery = customBio ? `&bio=${encodeURIComponent(customBio)}` : '';
     const stackQuery = `&langs=${encodeURIComponent(langStr)}&frames=${encodeURIComponent(frameStr)}&cloud=${encodeURIComponent(cloudStr)}`;
@@ -182,7 +182,11 @@ export default function App() {
     if (type === 'trophies') ext = `&view=trophies`;
     if (type === 'art') ext = `&view=art&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}`;
     if (type === 'arsenal') ext = `&view=arsenal${stackQuery}`;
-    return `[![OctoVibe Metric](${baseUrl}${ext})](https://github.com/JaibhagwanJindal/octovibe)`;
+    return `${baseUrl}${ext}`;
+  };
+
+  const getEmbedCode = (type, baseUrl) => {
+    return `[![OctoVibe Metric](${getEmbedUrl(type, baseUrl)})](https://github.com/JaibhagwanJindal/octovibe)`;
   };
 
   const triggerCopy = (viewMode, idx, extra = '') => {
@@ -203,14 +207,17 @@ export default function App() {
     setDeployStatus('');
     try {
       const baseUrl = `https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}`;
-      const mdContent = `
-<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
+      
+      const renderImg = (type) => `<a href="https://github.com/JaibhagwanJindal/octovibe"><img src="${getEmbedUrl(type, baseUrl)}" alt="OctoVibe Metric" /></a>`;
+
+      const mdContent = `<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
+
 <p align="center">
-  ${getEmbedCode('all', baseUrl)}<br/>
-  ${visible.streak ? getEmbedCode('streak', baseUrl) + '<br/>' : ''}
-  ${visible.languages ? getEmbedCode('arsenal', baseUrl) + '<br/>' : ''}
-  ${visible.trophies ? getEmbedCode('trophies', baseUrl) + '<br/>' : ''}
-  ${visible.art ? getEmbedCode('art', baseUrl) : ''}
+  ${renderImg('all')}<br/><br/>
+  ${visible.streak ? renderImg('streak') + '<br/><br/>' : ''}
+  ${visible.languages ? renderImg('arsenal') + '<br/><br/>' : ''}
+  ${visible.trophies ? renderImg('trophies') + '<br/><br/>' : ''}
+  ${visible.art ? renderImg('art') : ''}
 </p>
 `;
       const repoName = displayProfile.login;
