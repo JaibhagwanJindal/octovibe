@@ -84,6 +84,10 @@ async function fetchUserTelemetry(username, userToken = '') {
     ]
   };
 
+  if (!activeToken && username.toLowerCase() !== 'octovibe') {
+    return { isError: true, message: "⚠️ BACKEND CONFIGURATION MISSING: You must add a GITHUB_TOKEN environment variable to your Vercel deployment so the serverless function can securely fetch your live GraphQL data." };
+  }
+
   if (username.toLowerCase() === 'octovibe' || !activeToken) {
     return { ...fallbackData, name: "OctoVibe Studio", login: "octovibe", avatarUrl: "https://github.com/identicons/octovibe.png", commits: 918, repos: 24, stars: 86, currentStreak: 4, longestStreak: 48, consistencyGrade: "B" };
   }
@@ -246,6 +250,15 @@ export default async function handler(req, res) {
   let svgContent = '';
 
   const escapeXML = str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+
+  if (data.isError) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
+    return res.status(200).send(`<svg xmlns="http://www.w3.org/2000/svg" width="780" height="100">
+      <rect width="100%" height="100%" fill="#2d0000" rx="14" stroke="#ff0000" stroke-width="2"/>
+      <text x="390" y="55" fill="#ff6b6b" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle">${escapeXML(data.message)}</text>
+    </svg>`);
+  }
 
   if (view === 'all') {
     const displayBio = bio || data.bio;

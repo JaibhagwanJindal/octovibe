@@ -558,7 +558,7 @@ export default function App() {
               disabled={isDeploying}
               className={`px-8 py-3 rounded-lg font-bold text-sm shadow-xl transition-all w-64 ${isDeploying ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-[#2ea043] hover:bg-[#2c974b] text-white hover:scale-105'}`}
             >
-              {isDeploying ? 'Deploying to GitHub...' : '🚀 Push to Profile (Launch v1)'}
+              {isDeploying ? 'Deploying to GitHub...' : '🚀 Push to Profile'}
             </button>
             {deployStatus && (
               <div className={`mt-4 text-center text-xs font-bold px-4 py-2 rounded-md ${deployStatus.includes('Success') ? 'text-[#56d364] bg-[#56d364]/10' : 'text-red-400 bg-red-400/10'}`}>
