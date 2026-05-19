@@ -85,7 +85,7 @@ async function fetchUserTelemetry(username, userToken = '') {
   };
 
   if (!activeToken && username.toLowerCase() !== 'octovibe') {
-    return { isError: true, message: "⚠️ BACKEND CONFIGURATION MISSING: You must add a GITHUB_TOKEN environment variable to your Vercel deployment so the serverless function can securely fetch your live GraphQL data." };
+    return { isError: true, message: "⚠️ OctoVibe API Error: The SaaS backend token (GITHUB_TOKEN) has not been configured by the platform owner." };
   }
 
   if (username.toLowerCase() === 'octovibe' || !activeToken) {
