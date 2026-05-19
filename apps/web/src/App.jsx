@@ -78,7 +78,7 @@ export default function App() {
     const headers = { 'Content-Type': 'application/json' };
     if (targetToken) headers['Authorization'] = `Bearer ${targetToken}`;
 
-    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&json=true&_t=${Date.now()}`, { headers })
+    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&json=true&_t=${Date.now()}`, { headers })
       .then(res => res.json())
       .then(resData => {
         if (resData.profile) {
@@ -140,7 +140,23 @@ export default function App() {
     if (!hasAuthCode) {
       queryTelemetryPipeline(username, token);
     }
-  }, [username, token]);
+  }, [username, token, heroLayout, artStyle, artBg]);
+
+  // Typographic Name Slicing Algorithm
+  useEffect(() => {
+    if (profile) {
+      const rawName = profile.name || profile.login || '';
+      setArtTitle(rawName);
+      const parts = rawName.trim().split(/\s+/);
+      const first = parts[0] || '';
+      const last = parts.length > 1 ? parts[parts.length - 1] : '';
+      const combinedLen = parts.length > 1 ? first.length + last.length : first.length;
+      setArtText(combinedLen <= 10 && parts.length > 1 ? `${first}${last}`.toUpperCase() : first.toUpperCase());
+    } else {
+      setArtTitle('OCTOVIBE VISUALS');
+      setArtText('CONNECTED');
+    }
+  }, [profile?.login]);
 
   useEffect(() => {
     const gridData = buildArtGrid(artText, totalCols, artBg);
@@ -274,12 +290,12 @@ export default function App() {
             {visible.metrics && (
               <div className="grid grid-cols-4 gap-4 w-full animate-fadeIn">
                 {[
-                  { label: 'Repositories',  val: displayProfile.repos,        icon: 'fa-book-bookmark' },
-                  { label: 'Total Stars',   val: displayProfile.stars    || 0, icon: 'fa-star' },
-                  { label: 'Contributions', val: displayProfile.commits,       icon: 'fa-cubes' },
-                  { label: 'Followers',     val: displayProfile.followers || 0, icon: 'fa-users' }
+                  { label: 'Repositories',  val: displayProfile.repos,        icon: 'fa-book-bookmark', tooltip: 'Total public repositories owned by the user' },
+                  { label: 'Total Stars',   val: displayProfile.stars    || 0, icon: 'fa-star', tooltip: 'Cumulative stargazers across public repositories' },
+                  { label: 'Contributions', val: displayProfile.commits,       icon: 'fa-cubes', tooltip: 'Total combined commits, PRs, issues, and code reviews' },
+                  { label: 'Followers',     val: displayProfile.followers || 0, icon: 'fa-users', tooltip: 'Ecosystem developers following this account' }
                 ].map((s, idx) => (
-                  <div className="p-4 rounded-xl border" key={idx} style={{ backgroundColor: p.cardBg, borderColor: p.cardBorder }}>
+                  <div className="p-4 rounded-xl border" key={idx} style={{ backgroundColor: p.cardBg, borderColor: p.cardBorder }} title={s.tooltip}>
                     <div className="flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase mb-1">
                       <span>{s.label}</span><i className={`fas ${s.icon}`} style={{ color: p.primaryColor }} />
                     </div>
@@ -293,9 +309,9 @@ export default function App() {
               <div className="p-5 rounded-xl border bg-black/10 w-full animate-fadeIn" style={{ borderColor: p.cardBorder }}>
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Telemetry Consistency Engine</h4>
                 <div className="grid grid-cols-3 gap-4 font-mono text-xs">
-                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Current active streak</p><p className="text-xl font-black mt-0.5" style={{ color: p.primaryColor }}>{displayProfile.currentStreak || 0} Day</p></div>
-                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Longest historic streak</p><p className="text-xl font-black text-white mt-0.5">{displayProfile.longestStreak || 0} Days</p></div>
-                  <div className="p-3 bg-black/20 rounded-lg border border-white/5"><p className="text-gray-500 uppercase text-[9px]">Annual Volume (2026)</p><p className="text-xl font-black text-white mt-0.5">{displayProfile.commits || 0}</p></div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5" title="Consecutive days with at least one recorded contribution"><p className="text-gray-500 uppercase text-[9px]">Current active streak</p><p className="text-xl font-black mt-0.5" style={{ color: p.primaryColor }}>{displayProfile.currentStreak || 0} Day</p></div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5" title="All-time maximum chronological consecutive contribution streak"><p className="text-gray-500 uppercase text-[9px]">Longest historic streak</p><p className="text-xl font-black text-white mt-0.5">{displayProfile.longestStreak || 0} Days</p></div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5" title="Total contribution event footprint for the current calendar year"><p className="text-gray-500 uppercase text-[9px]">Annual Volume (2026)</p><p className="text-xl font-black text-white mt-0.5">{displayProfile.commits || 0}</p></div>
                 </div>
               </div>
             )}
@@ -377,7 +393,7 @@ export default function App() {
               { label: '14+ Gamified Trophy Panel Matrix',         t: 'trophies',  ext: '' },
               { label: 'Dynamic Language Fingerprint Chart',       t: 'languages', ext: `&lang_layout=${langLayout}` },
               { label: 'Consistency Streak Counter Block',         t: 'streak',    ext: '' },
-              { label: 'Custom Typographic Contribution Grid Art', t: 'art',       ext: `&art_text=${artText}&art_style=${artStyle}&art_bg=${artBg}` }
+              { label: 'Custom Typographic Contribution Grid Art', t: 'art',       ext: `&art_text=${encodeURIComponent(artText)}&art_title=${encodeURIComponent(artTitle)}&art_style=${artStyle}&art_bg=${artBg}` }
             ].map((item, idx) => {
               const str = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}&view=${item.t}${item.ext})`;
               return (

@@ -212,8 +212,11 @@ export default async function handler(req, res) {
   const {
     user = 'octovibe', theme = 'midnight-blue', view = 'all',
     json = 'false', lang_layout = 'pipeline',
-    art_text = 'OCTOVIBE', art_style = 'flat', art_bg = '0'
+    art_text = 'OCTOVIBE', art_style = 'flat', art_bg = '0',
+    hero_layout = 'minimalist', art_title = 'OCTOVIBE VISUALS'
   } = req.query;
+
+  const escapeXML = str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : '';
@@ -312,10 +315,18 @@ export default async function handler(req, res) {
 
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="190">
       <rect width="100%" height="100%" fill="${p.background}" rx="12" stroke="${p.cardBorder}" stroke-width="1"/>
-      <text x="30" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="13" font-weight="bold">${art_text}</text>
+      <text x="30" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="13" font-weight="bold">Contribution Grid Art — <tspan fill="#56d364">${escapeXML(art_title)}</tspan></text>
       <g transform="translate(${svgWidth - 90},23)"><rect width="50" height="18" rx="4" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="1"/><text x="25" y="13" fill="${p.textPrimary}" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">2026</text></g>
       ${monthHeaders}${gridCells}
-      <g transform="translate(50,170)" font-family="sans-serif" font-size="10" fill="${p.textTertiary}"><text x="0" y="0">Less</text><rect x="30" y="-8" width="10" height="10" rx="1" fill="#151b23" stroke="#21262d"/><rect x="44" y="-8" width="10" height="10" rx="1" fill="#033a16"/><rect x="58" y="-8" width="10" height="10" rx="1" fill="#196c2e"/><rect x="72" y="-8" width="10" height="10" rx="1" fill="#2ea043"/><rect x="86" y="-8" width="10" height="10" rx="1" fill="#56d364"/><text x="102" y="0">More</text></g>
+      <g transform="translate(50,170)" font-family="sans-serif" font-size="10" fill="${p.textTertiary}">
+        <text x="0" y="0">Less</text>
+        <rect x="30" y="-8" width="10" height="10" rx="${art_style === 'flat' ? 2 : 4}" fill="${CLR_ARRAY[0]}" ${art_style === 'flat' ? 'stroke="#21262d" stroke-width="1"' : ''}/>
+        <rect x="44" y="-8" width="10" height="10" rx="${art_style === 'flat' ? 2 : 4}" fill="${CLR_ARRAY[1]}"/>
+        <rect x="58" y="-8" width="10" height="10" rx="${art_style === 'flat' ? 2 : 4}" fill="${CLR_ARRAY[2]}"/>
+        <rect x="72" y="-8" width="10" height="10" rx="${art_style === 'flat' ? 2 : 4}" fill="${CLR_ARRAY[3]}"/>
+        <rect x="86" y="-8" width="10" height="10" rx="${art_style === 'flat' ? 2 : 4}" fill="${CLR_ARRAY[4]}"/>
+        <text x="102" y="0">More</text>
+      </g>
     </svg>`;
   }
 
