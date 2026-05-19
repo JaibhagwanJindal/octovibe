@@ -150,7 +150,7 @@ export default function App() {
     const gridData = buildArtGrid(artText, totalCols, artBg);
     setRenderedGrid(gridData);
     let commits = 0;
-    const remainderDays = new Date(currentYear, 11, 31).getDay() + 1;
+    const remainderDays = (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0)) ? 2 : 1;
     for (let r = 0; r < 7; r++) {
       for (let c = 0; c < totalCols; c++) {
         if (c === totalCols - 1 && r >= remainderDays) continue;
@@ -339,11 +339,11 @@ export default function App() {
                       </div>
                       <div className="flex gap-1.5 w-full">
                         <div className="text-[9px] text-gray-500 font-bold h-[78px] flex flex-col justify-between pr-1 select-none"><span>M</span><span>W</span><span>F</span></div>
-                        <div className="flex-1 grid grid-flow-col auto-cols-fr gap-[2px]">
+                        <div className="flex-1 grid grid-flow-col auto-cols-fr gap-[2px]" style={{ minWidth: `${totalCols * (artStyle === 'flat' ? 13 : 18)}px` }}>
                           {Array.from({ length: totalCols }).map((_, cIdx) => (
                             <div key={cIdx} className="grid grid-rows-7 gap-[2px]">
                               {Array.from({ length: 7 }).map((_, rIdx) => {
-                                const remainderDays = new Date(currentYear, 11, 31).getDay() + 1;
+                                const remainderDays = (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0)) ? 2 : 1;
                                 if (cIdx === totalCols - 1 && rIdx >= remainderDays) return null;
                                 const lv = renderedGrid[rIdx]?.[cIdx] ?? 0;
                                 if (artStyle === 'flat') {

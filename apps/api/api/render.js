@@ -300,7 +300,8 @@ export default async function handler(req, res) {
     const CLR_ARRAY = ['#151b23', '#033a16', '#196c2e', '#2ea043', '#56d364'];
     const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    const remainderDays = new Date(new Date().getFullYear(), 11, 31).getDay() + 1;
+    const currentYear = new Date().getFullYear();
+    const remainderDays = (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0)) ? 2 : 1;
     let gridCells = '';
     for (let c = 0; c < totalCols; c++) {
       for (let r = 0; r < 7; r++) {
