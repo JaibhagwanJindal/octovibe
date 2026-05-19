@@ -6,7 +6,7 @@ export default function App() {
   const currentYear = new Date().getFullYear();
   const themesList  = getThemes();
 
-  // SaaS Multi-Tenant Authentication Hook Closures
+  // Pure SaaS Initial State Allocations
   const [token,    setToken]    = useState(() => localStorage.getItem('octovibe_token') || '');
   const [username, setUsername] = useState(() => localStorage.getItem('octovibe_user')  || 'octovibe');
 
@@ -86,7 +86,7 @@ export default function App() {
       .catch(err => console.error('Telemetry API channel sync exception:', err));
   };
 
-  // Secure OAuth Exchange Handshake Hook
+  // 1. ISOLATED AUTHENTICATION INTERCEPTOR GATEWAY: Runs exclusively when returning from GitHub
   useEffect(() => {
     const params   = new URLSearchParams(window.location.search);
     const authCode = params.get('code');
@@ -109,9 +109,13 @@ export default function App() {
               .then(userData => {
                 if (userData.login) {
                   localStorage.setItem('octovibe_user', userData.login);
+                  
+                  // Synchronously lock memory flags to enforce clean layout hydration states
                   setToken(data.access_token);
                   setUsername(userData.login);
                   window.history.replaceState({}, document.title, window.location.pathname);
+                  
+                  // Force direct data injection bypass to ignore stale reactive closures
                   queryTelemetryPipeline(userData.login, data.access_token);
                 }
               });
@@ -121,7 +125,7 @@ export default function App() {
     }
   }, []);
 
-  // Standard Lifecycle Synchronization Hook
+  // 2. RUNTIME LIFECYCLE SYNC: Completely blocked if an active authorization is compiling
   useEffect(() => {
     const params      = new URLSearchParams(window.location.search);
     const hasAuthCode = params.get('code');
@@ -157,7 +161,7 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[#010409] text-gray-300 font-sans antialiased overflow-hidden select-none relative">
 
-      {/* AUTHENTICATION TOAST BANNER OVERLAY */}
+      {/* AUTH OVERLAY ALERTS TOAST BANNER */}
       {showAuthWarning && (
         <div className="absolute top-5 right-5 z-50 bg-amber-950/95 border border-amber-500 text-amber-300 px-4 py-3 rounded-xl flex items-center gap-3 shadow-2xl font-medium text-xs backdrop-blur animate-slideIn">
           <i className="fas fa-lock text-amber-400 animate-bounce"></i>
@@ -165,7 +169,7 @@ export default function App() {
         </div>
       )}
 
-      {/* LEFT CONTROL PANEL HUB SIDEBAR */}
+      {/* SIDEBAR hub CONSOLE DESIGN */}
       <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
