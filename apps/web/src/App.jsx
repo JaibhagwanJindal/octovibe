@@ -33,6 +33,9 @@ export default function App() {
   const [renderedGrid, setRenderedGrid] = useState([]);
   const [artCommits, setArtCommits] = useState(0);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deployStatus, setDeployStatus] = useState('');
 
   const CLR_MAP = ['#151b23', '#033a16', '#196c2e', '#2ea043', '#56d364'];
   const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -188,6 +191,79 @@ export default function App() {
     navigator.clipboard.writeText(code);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleLaunchProfile = async () => {
+    if (!token) {
+      setShowAuthWarning(true);
+      setTimeout(() => setShowAuthWarning(false), 4000);
+      return;
+    }
+    setIsDeploying(true);
+    setDeployStatus('');
+    try {
+      const baseUrl = `https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}`;
+      const mdContent = `
+<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
+<p align="center">
+  ${getEmbedCode('all', baseUrl)}<br/>
+  ${visible.streak ? getEmbedCode('streak', baseUrl) + '<br/>' : ''}
+  ${visible.languages ? getEmbedCode('arsenal', baseUrl) + '<br/>' : ''}
+  ${visible.trophies ? getEmbedCode('trophies', baseUrl) + '<br/>' : ''}
+  ${visible.art ? getEmbedCode('art', baseUrl) : ''}
+</p>
+`;
+      const repoName = displayProfile.login;
+      let sha = null;
+      let repoExists = true;
+      
+      try {
+        const checkRes = await fetch(`https://api.github.com/repos/${displayProfile.login}/${repoName}/contents/README.md`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (checkRes.ok) {
+          const fileData = await checkRes.json();
+          sha = fileData.sha;
+        } else if (checkRes.status === 404) {
+          const repoCheck = await fetch(`https://api.github.com/repos/${displayProfile.login}/${repoName}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (repoCheck.status === 404) repoExists = false;
+        }
+      } catch (e) {
+        console.error("Repository check failed", e);
+      }
+
+      if (!repoExists) {
+        const createRes = await fetch(`https://api.github.com/user/repos`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: repoName, description: 'My GitHub Profile', private: false, auto_init: true })
+        });
+        if (!createRes.ok) throw new Error('Failed to create profile repository.');
+      }
+
+      const utf8ToBase64 = (str) => window.btoa(unescape(encodeURIComponent(str)));
+      const pushRes = await fetch(`https://api.github.com/repos/${displayProfile.login}/${repoName}/contents/README.md`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Update profile via OctoVibe 🚀',
+          content: utf8ToBase64(mdContent.trim()),
+          sha: sha || undefined
+        })
+      });
+
+      if (pushRes.ok) {
+        setDeployStatus('✅ Success! Your GitHub profile is now live.');
+      } else {
+        throw new Error('Failed to update README.md');
+      }
+    } catch (err) {
+      setDeployStatus(`❌ Error: ${err.message}`);
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   return (
@@ -460,25 +536,28 @@ export default function App() {
           </div>
         </div>
 
-        {/* EMBED REGISTRY ROWS CONFIGURATION */}
-        <div className="bg-[#0d1117] border border-[#30363d] rounded-xl p-5 space-y-3 shadow-xl select-text">
-          <div><h3 className="text-sm font-bold text-white">Production Embed Code Generation Registry</h3><p className="text-xs text-gray-400">Select any layout slice to extract its markdown anchor string.</p></div>
-          <div className="space-y-2">
-            {[
-              { label: "Complete Identity Suite Snippet", t: "all", ext: `&hero_layout=${heroLayout}` },
-              { label: "14+ Gamified Trophy Panel Matrix", t: "trophies", ext: '' },
-              { label: "Consistency Streak Counter Block", t: "streak", ext: '' },
-              { label: "Custom Typographic Contribution Grid Art", t: "art", ext: `&art_text=${artText}&art_style=${artStyle}&art_bg=${artBg}` }
-            ].map((item, idx) => {
-              const str = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}&view=${item.t}${item.ext})`;
-              return (
-                <div key={idx} className="bg-[#161b22] border border-[#21262d] p-3 rounded-lg flex gap-3 items-center">
-                  <span className="text-xs font-bold text-gray-300 w-64 text-left flex-shrink-0"><i className="fas fa-link text-[#388bfd] mr-2"></i>{item.label}</span>
-                  <input type="text" readOnly value={str} className="flex-1 w-full bg-[#010409] border border-[#30363d] rounded p-2 text-[10px] font-mono text-gray-500 outline-none" />
-                  <button onClick={() => triggerCopy(item.t, idx, item.ext)} className="bg-[#21262d] hover:bg-[#30363d] text-white px-4 py-1.5 rounded text-xs font-bold transition-all min-w-[100px]">{copiedIndex === idx ? "✓ Copied!" : "Copy Snippet"}</button>
-                </div>
-              );
-            })}
+        {/* AUTOMATED LAUNCH V1 DEPLOYMENT FLOW */}
+        <div className="bg-[#0d1117] border border-[#30363d] rounded-xl p-8 shadow-xl mt-8 animate-fadeIn">
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-black text-white tracking-tight">Launch Profile to GitHub</h3>
+            <p className="text-xs text-gray-400 mt-2 max-w-lg mx-auto leading-relaxed">
+              Automatically generate the final markdown blueprint and securely push this exact layout directly to your <code className="text-[#58a6ff] bg-[#161b22] px-1.5 py-0.5 rounded mx-1">@{displayProfile.login}/{displayProfile.login}</code> repository.
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-center justify-center">
+            <button 
+              onClick={handleLaunchProfile}
+              disabled={isDeploying}
+              className={`px-8 py-3 rounded-lg font-bold text-sm shadow-xl transition-all w-64 ${isDeploying ? 'bg-gray-700 text-gray-400 cursor-not-allowed' : 'bg-[#2ea043] hover:bg-[#2c974b] text-white hover:scale-105'}`}
+            >
+              {isDeploying ? 'Deploying to GitHub...' : '🚀 Push to Profile (Launch v1)'}
+            </button>
+            {deployStatus && (
+              <div className={`mt-4 text-center text-xs font-bold px-4 py-2 rounded-md ${deployStatus.includes('Success') ? 'text-[#56d364] bg-[#56d364]/10' : 'text-red-400 bg-red-400/10'}`}>
+                {deployStatus}
+              </div>
+            )}
           </div>
         </div>
       </main>
