@@ -54,24 +54,27 @@ export default function App() {
       body: JSON.stringify({ code: authCode })
     })
       .then(res => {
-        if (!res.ok) throw new Error('Secure Exchange Rejected');
+        if (!res.ok) throw new Error('Network auth response was not ok');
         return res.json();
       })
       .then(data => {
-        if (!data.access_token) return;
-        localStorage.setItem('octovibe_token', data.access_token);
-        fetch('https://api.github.com/user', {
-          headers: { 'Authorization': `token ${data.access_token}` }
-        })
-          .then(r => r.json())
-          .then(userData => {
-            if (userData.login) {
-              localStorage.setItem('octovibe_user', userData.login);
-              setToken(data.access_token);
-              setUsername(userData.login);
-              window.history.replaceState({}, document.title, window.location.pathname);
-            }
-          });
+        if (data.access_token) {
+          localStorage.setItem('octovibe_token', data.access_token);
+          fetch('https://api.github.com/user', {
+            headers: { 'Authorization': `token ${data.access_token}` }
+          })
+            .then(r => r.json())
+            .then(userData => {
+              if (userData.login) {
+                localStorage.setItem('octovibe_user', userData.login);
+                setToken(data.access_token);
+                setUsername(userData.login);
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
+            });
+        } else {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
       })
       .catch(err => {
         console.error('SaaS Identity authentication process exception loop:', err);
@@ -93,7 +96,7 @@ export default function App() {
           setTrophies(resData.trophies || []);
         }
       })
-      .catch(err => console.error('Telemetry fetch exception:', err));
+      .catch(err => console.error('Telemetry loading matrix broken:', err));
   }, [username, token]);
 
   useEffect(() => {
@@ -112,7 +115,7 @@ export default function App() {
   if (!profile) return (
     <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono flex flex-col items-center justify-center gap-4">
       <div className="w-9 h-9 border-4 border-[#388bfd] border-t-transparent rounded-full animate-spin"></div>
-      <span className="text-sm font-bold tracking-wide">Establishing encrypted connection interface to OctoVibe secure node mesh...</span>
+      <span className="text-sm font-bold tracking-wide">Syncing authenticated data from serverless pipeline proxy...</span>
     </div>
   );
 
@@ -145,7 +148,7 @@ export default function App() {
                 <i className="fab fa-github text-sm"></i> Connect GitHub Account
               </button>
             ) : (
-              <div className="bg-black/20 border border-emerald-500/20 p-2.5 rounded-lg flex items-center justify-between animate-fadeIn">
+              <div className="bg-black/20 border border-emerald-500/20 p-2.5 rounded-lg flex items-center justify-between">
                 <div className="truncate">
                   <p className="text-[9px] uppercase font-bold text-emerald-400">Live Session Active</p>
                   <p className="text-xs font-mono font-bold text-[#58a6ff] truncate mt-0.5">@{username}</p>
