@@ -331,15 +331,18 @@ export default function App() {
                   </div>
                   <div className="w-full overflow-x-auto">
                     <div className="w-full flex flex-col gap-1 select-none">
-                      <div className="flex h-5 relative text-[9px] text-gray-400 font-bold mb-1 pl-8 w-full">
-                        {MONS.map((m, idx) => {
-                          const colOffset = Math.floor((idx / 12) * totalCols);
-                          return <span key={idx} className="absolute" style={{ left: `${colOffset * (artStyle === 'flat' ? 13 : 18) + 32}px` }}>{m}</span>;
-                        })}
+                      <div className="flex gap-1.5 w-full mb-1">
+                        <div className="text-[9px] font-bold pr-1 invisible">M</div>
+                        <div className="flex-1 relative h-5 text-[9px] text-gray-400 font-bold">
+                          {MONS.map((m, idx) => {
+                            const colOffset = Math.floor((idx / 12) * totalCols);
+                            return <span key={idx} className="absolute" style={{ left: `${(colOffset / totalCols) * 100}%` }}>{m}</span>;
+                          })}
+                        </div>
                       </div>
                       <div className="flex gap-1.5 w-full">
                         <div className="text-[9px] text-gray-500 font-bold h-[78px] flex flex-col justify-between pr-1 select-none"><span>M</span><span>W</span><span>F</span></div>
-                        <div className="flex-1 grid grid-flow-col auto-cols-fr gap-[2px]" style={{ minWidth: `${totalCols * (artStyle === 'flat' ? 13 : 18)}px` }}>
+                        <div className="flex-1 grid grid-flow-col auto-cols-fr gap-[2px]">
                           {Array.from({ length: totalCols }).map((_, cIdx) => (
                             <div key={cIdx} className="grid grid-rows-7 gap-[2px]">
                               {Array.from({ length: 7 }).map((_, rIdx) => {
