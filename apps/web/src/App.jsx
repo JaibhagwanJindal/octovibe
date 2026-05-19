@@ -20,6 +20,11 @@ export default function App() {
   const [artStyle, setArtStyle] = useState('flat');
   const [artBg, setArtBg] = useState('0');
 
+  const [customBio, setCustomBio] = useState('');
+  const [langStr, setLangStr] = useState('JavaScript, TypeScript, Python, HTML5, CSS3, C++');
+  const [frameStr, setFrameStr] = useState('React, Next.js, Node.js, Express, TailwindCSS');
+  const [cloudStr, setCloudStr] = useState('Firebase, PostgreSQL, AWS, Vercel, Docker');
+
   const [showAuthWarning, setShowAuthWarning] = useState(false);
   const [visible, setVisible] = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true });
   
@@ -162,11 +167,25 @@ export default function App() {
   }, [artText, artBg, totalCols, currentYear]);
 
   const displayProfile = profile || placeholderProfile;
+  const displayBio = customBio || displayProfile.bio;
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
 
+  const getEmbedCode = (type, baseUrl) => {
+    let ext = '';
+    const bioQuery = customBio ? `&bio=${encodeURIComponent(customBio)}` : '';
+    const stackQuery = `&langs=${encodeURIComponent(langStr)}&frames=${encodeURIComponent(frameStr)}&cloud=${encodeURIComponent(cloudStr)}`;
+    if (type === 'all') ext = `&hero_layout=${heroLayout}${bioQuery}`;
+    if (type === 'streak') ext = `&view=streak`;
+    if (type === 'trophies') ext = `&view=trophies`;
+    if (type === 'art') ext = `&view=art&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}`;
+    if (type === 'arsenal') ext = `&view=arsenal${stackQuery}`;
+    return `[![OctoVibe Metric](${baseUrl}${ext})](https://github.com/JaibhagwanJindal/octovibe)`;
+  };
+
   const triggerCopy = (viewMode, idx, extra = '') => {
-    const targetUrl = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}&view=${viewMode}${extra})`;
-    navigator.clipboard.writeText(targetUrl);
+    const targetUrl = `https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}`;
+    const code = getEmbedCode(viewMode, targetUrl);
+    navigator.clipboard.writeText(code);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
@@ -224,6 +243,18 @@ export default function App() {
             </div>
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Hero Biography</label>
+              <textarea value={customBio} onChange={e => handleProtectedField(setCustomBio, e.target.value)} placeholder="Write a custom bio..." className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-2 text-xs text-white outline-none resize-none h-16 focus:border-[#58a6ff]"></textarea>
+            </div>
+
+            <div className="border-t border-[#21262d] pt-3 space-y-2">
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Tech Stack Arsenal</label>
+              <input type="text" value={langStr} onChange={e => handleProtectedField(setLangStr, e.target.value)} placeholder="Languages (comma separated)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none mb-1.5" />
+              <input type="text" value={frameStr} onChange={e => handleProtectedField(setFrameStr, e.target.value)} placeholder="Frameworks (comma separated)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none mb-1.5" />
+              <input type="text" value={cloudStr} onChange={e => handleProtectedField(setCloudStr, e.target.value)} placeholder="Cloud & Tools (comma separated)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
+            </div>
+
+            <div className="border-t border-[#21262d] pt-3 space-y-2">
               <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
               <input type="text" value={artTitle} onChange={e => handleProtectedField(setArtTitle, e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
@@ -248,13 +279,14 @@ export default function App() {
                     <img src={displayProfile.avatarUrl} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
                     <h2 className="text-2xl font-black text-white tracking-tight mt-3">{displayProfile.name}</h2>
                     <p className="text-sm font-mono font-bold" style={{ color: p.primaryColor }}>@{displayProfile.login}</p>
-                    <p className="text-xs text-gray-300 mt-2 font-medium max-w-xl mx-auto">{displayProfile.bio}</p>
+                    <p className="text-xs text-gray-300 mt-2 font-medium max-w-xl mx-auto">{displayBio}</p>
                   </div>
                 )}
                 {heroLayout === 'terminal' && (
                   <div className="bg-black/40 rounded-xl p-5 border font-mono text-[11px] space-y-1" style={{ borderColor: p.cardBorder }}>
                     <p><span className="text-emerald-400">visitor@octovibe:~#</span> fetch info --user @{displayProfile.login}</p>
                     <p className="pl-4 text-gray-300">{`{ "name": "${displayProfile.name}", "repositories": ${displayProfile.repos} }`}</p>
+                    <p className="pl-4 text-gray-300">{`{ "bio": "${displayBio}" }`}</p>
                   </div>
                 )}
                 {heroLayout === 'corporate' && (
@@ -299,6 +331,57 @@ export default function App() {
                   <div className="p-3 bg-black/20 rounded-lg border border-white/5" title="Consecutive days with at least one recorded contribution"><p className="text-gray-500 uppercase text-[9px]">Current Active Streak</p><p className="text-xl font-black mt-0.5" style={{ color: p.primaryColor }}>{displayProfile.currentStreak || 0} Day</p></div>
                   <div className="p-3 bg-black/20 rounded-lg border border-white/5" title="All-time maximum chronological consecutive contribution streak"><p className="text-gray-500 uppercase text-[9px]">Longest Historic Streak</p><p className="text-xl font-black text-white mt-0.5">{displayProfile.longestStreak || 0} Days</p></div>
                   <div className="p-3 bg-black/20 rounded-lg border border-white/5" title="Total contribution event footprint consistency performance grade metric"><p className="text-gray-500 uppercase text-[9px]">Consistency Grade</p><p className="text-xl font-black text-white mt-0.5">{displayProfile.consistencyGrade}</p></div>
+                </div>
+              </div>
+            )}
+
+            {visible.languages && (
+              <div className="grid grid-cols-3 gap-4 w-full animate-fadeIn">
+                <div className="col-span-1 p-5 rounded-xl border bg-black/10 flex flex-col gap-4" style={{ borderColor: p.cardBorder }}>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Top Languages</h4>
+                  <div className="space-y-4 flex-1 justify-center flex flex-col">
+                    {displayProfile.topLanguages ? displayProfile.topLanguages.map((lang, i) => (
+                      <div key={i} className="w-full">
+                        <div className="flex justify-between text-[10px] font-bold mb-1.5">
+                          <span style={{ color: lang.color }}>{lang.name}</span>
+                          <span className="text-gray-500">{lang.percentage}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-[#21262d] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${lang.percentage}%`, backgroundColor: lang.color }}></div>
+                        </div>
+                      </div>
+                    )) : <p className="text-xs text-gray-500 italic">No language data found.</p>}
+                  </div>
+                </div>
+
+                <div className="col-span-2 p-5 rounded-xl border bg-black/10" style={{ borderColor: p.cardBorder }}>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Tech Stack & Ecosystem</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <h5 className="text-[9px] font-bold text-gray-500 uppercase mb-2">Languages</h5>
+                      <div className="flex flex-wrap gap-1.5">
+                        {langStr.split(',').map(s => s.trim()).filter(Boolean).map((s, i) => (
+                          <span key={i} className="px-2 py-1 text-[9px] font-bold rounded bg-[#161b22] border border-[#30363d] text-gray-300 shadow-sm">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h5 className="text-[9px] font-bold text-gray-500 uppercase mb-2">Frameworks & Libraries</h5>
+                      <div className="flex flex-wrap gap-1.5">
+                        {frameStr.split(',').map(s => s.trim()).filter(Boolean).map((s, i) => (
+                          <span key={i} className="px-2 py-1 text-[9px] font-bold rounded bg-[#161b22] border border-[#30363d] text-[#58a6ff] shadow-sm">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h5 className="text-[9px] font-bold text-gray-500 uppercase mb-2">Cloud & Database</h5>
+                      <div className="flex flex-wrap gap-1.5">
+                        {cloudStr.split(',').map(s => s.trim()).filter(Boolean).map((s, i) => (
+                          <span key={i} className="px-2 py-1 text-[9px] font-bold rounded bg-[#161b22] border border-[#30363d] text-[#56d364] shadow-sm">{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

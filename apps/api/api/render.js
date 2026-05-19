@@ -229,7 +229,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { user = 'octovibe', theme = 'midnight-blue', view = 'all', json = 'false', hero_layout = 'minimalist', art_style = 'flat', art_bg = '0', art_text = 'CONNECTED', art_title = 'OCTOVIBE VISUALS' } = req.query;
+  const { user = 'octovibe', theme = 'midnight-blue', view = 'all', json = 'false', hero_layout = 'minimalist', art_style = 'flat', art_bg = '0', art_text = 'CONNECTED', art_title = 'OCTOVIBE VISUALS', bio = '', langs = '', frames = '', cloud = '' } = req.query;
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : '';
 
@@ -248,6 +248,7 @@ export default async function handler(req, res) {
   const escapeXML = str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 
   if (view === 'all') {
+    const displayBio = bio || data.bio;
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="260">
       <rect width="100%" height="100%" fill="${p.background}" rx="14" stroke="${p.cardBorder}" stroke-width="1"/>
       <g transform="translate(30, 45)">
@@ -255,6 +256,7 @@ export default async function handler(req, res) {
         <text x="40" y="46" fill="${p.textPrimary}" font-family="sans-serif" font-size="24" text-anchor="middle">🐙</text>
         <text x="100" y="35" font-weight="800" font-size="22" fill="${p.primaryColor}" font-family="sans-serif">${escapeXML(data.name)}</text>
         <text x="100" y="60" font-family="sans-serif" font-size="14" fill="${p.textSecondary}">@${data.login}</text>
+        <text x="100" y="85" font-family="sans-serif" font-size="12" fill="${p.textTertiary}">${escapeXML(displayBio)}</text>
       </g>
       <g transform="translate(30, 150)" font-family="sans-serif">
         <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">REPOSITORIES</text><text x="0" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.repos}</text>
@@ -277,6 +279,51 @@ export default async function handler(req, res) {
       </g>`;
     }).join('');
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="770" height="${Math.ceil(trophies.length / 3) * 90 + 20}"><rect width="100%" height="100%" fill="${p.background}" rx="12"/>${cardItems}</svg>`;
+  }
+
+  else if (view === 'arsenal') {
+    const parsedLangs = (langs || 'JavaScript, TypeScript, Python, HTML5, CSS3, C++').split(',').map(s=>s.trim()).filter(Boolean);
+    const parsedFrames = (frames || 'React, Next.js, Node.js, Express, TailwindCSS').split(',').map(s=>s.trim()).filter(Boolean);
+    const parsedCloud = (cloud || 'Firebase, PostgreSQL, AWS, Vercel, Docker').split(',').map(s=>s.trim()).filter(Boolean);
+
+    let topLangsSVG = data.topLanguages.map((lang, i) => {
+      let y = 60 + i * 35;
+      return `<text x="30" y="${y}" fill="${lang.color}" font-family="sans-serif" font-size="11" font-weight="bold">${lang.name}</text>
+              <text x="210" y="${y}" fill="${p.textSecondary}" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="end">${lang.percentage}%</text>
+              <rect x="30" y="${y + 8}" width="180" height="6" rx="3" fill="#21262d"/>
+              <rect x="30" y="${y + 8}" width="${180 * (lang.percentage / 100)}" height="6" rx="3" fill="${lang.color}"/>`;
+    }).join('');
+
+    const renderBadges = (arr, startX, startY, color) => {
+      let html = '';
+      let curX = startX;
+      let curY = startY;
+      arr.forEach(text => {
+        let w = text.length * 7 + 16;
+        if (curX + w > 750) { curX = startX; curY += 30; }
+        html += `<rect x="${curX}" y="${curY}" width="${w}" height="24" rx="4" fill="#161b22" stroke="#30363d"/>
+                 <text x="${curX + w/2}" y="${curY + 16}" fill="${color}" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">${escapeXML(text)}</text>`;
+        curX += w + 8;
+      });
+      return html;
+    };
+
+    let badgesLangs = renderBadges(parsedLangs, 280, 60, p.textSecondary);
+    let badgesFrames = renderBadges(parsedFrames, 280, 130, p.primaryColor);
+    let badgesCloud = renderBadges(parsedCloud, 280, 200, '#56d364');
+
+    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="260">
+      <rect width="100%" height="100%" fill="${p.background}" rx="12" stroke="${p.cardBorder}" stroke-width="1"/>
+      <line x1="250" y1="30" x2="250" y2="230" stroke="${p.cardBorder}" stroke-width="1"/>
+      <text x="30" y="35" fill="${p.textTertiary}" font-family="sans-serif" font-size="10" font-weight="bold" letter-spacing="1">TOP LANGUAGES</text>
+      ${topLangsSVG}
+      <text x="280" y="35" fill="${p.textTertiary}" font-family="sans-serif" font-size="10" font-weight="bold" letter-spacing="1">LANGUAGES</text>
+      ${badgesLangs}
+      <text x="280" y="105" fill="${p.textTertiary}" font-family="sans-serif" font-size="10" font-weight="bold" letter-spacing="1">FRAMEWORKS &amp; LIBRARIES</text>
+      ${badgesFrames}
+      <text x="280" y="175" fill="${p.textTertiary}" font-family="sans-serif" font-size="10" font-weight="bold" letter-spacing="1">CLOUD &amp; DATABASE</text>
+      ${badgesCloud}
+    </svg>`;
   }
 
   else if (view === 'streak') {
