@@ -83,7 +83,7 @@ export default function App() {
           setTrophies(resData.trophies || []);
         }
       })
-      .catch(err => console.error('Telemetry server sync exception loop:', err));
+      .catch(err => console.error('Telemetry API channel sync exception:', err));
   };
 
   // Secure OAuth Exchange Handshake Hook
@@ -117,7 +117,7 @@ export default function App() {
               });
           }
         })
-        .catch(err => console.error('SaaS Token auth processing error:', err));
+        .catch(err => console.error('SaaS Identity token verification failed:', err));
     }
   }, []);
 
@@ -171,7 +171,7 @@ export default function App() {
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#388bfd] to-[#238636] flex items-center justify-center font-black text-white">🐙</div>
             <div>
-              <h1 className="text-sm font-bold text-white">OctoVibe Portal</h1>
+              <h1 className="text-sm font-bold text-white">OctoVibe Studio</h1>
               <p className="text-[10px] text-gray-500 uppercase font-black">SaaS Core</p>
             </div>
           </div>
@@ -304,7 +304,7 @@ export default function App() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500 italic font-medium">Connect your account session to unlock achievements analytics map.</p>
+                  <p className="text-xs text-gray-500 italic font-medium">Connect your account session to view gamified reward milestones.</p>
                 )}
               </div>
             )}
@@ -340,7 +340,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="mt-4 flex items-center justify-between text-[10px] text-gray-400">
-                    <span><b>{artCommits}</b> commits required to forge this typography layout matrix.</span>
+                    <span><b>{artCommits}</b> commits required to forge this layout profile blueprint array stack.</span>
                     <div className="flex items-center gap-1">
                       <span className="text-[9px] mr-1">Less</span>
                       {CLR_MAP.map((c, i) => <div key={i} className="w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: c, border: i === 0 ? '1px solid #21262d' : 'none' }} />)}
