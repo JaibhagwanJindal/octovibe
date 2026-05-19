@@ -65,7 +65,7 @@ export default function App() {
   };
 
   const handleProtectedField = (setValueAction, incomingValue) => {
-    if (!token || username === 'octovibe') {
+    if (!token) {
       setShowAuthWarning(true);
       setTimeout(() => setShowAuthWarning(false), 4000);
       return;
