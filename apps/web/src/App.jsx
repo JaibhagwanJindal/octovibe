@@ -213,11 +213,7 @@ export default function App() {
       const mdContent = `<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
 
 <p align="center">
-  ${renderImg('all')}<br/><br/>
-  ${visible.streak ? renderImg('streak') + '<br/><br/>' : ''}
-  ${visible.languages ? renderImg('arsenal') + '<br/><br/>' : ''}
-  ${visible.trophies ? renderImg('trophies') + '<br/><br/>' : ''}
-  ${visible.art ? renderImg('art') : ''}
+  ${renderImg('all')}${visible.streak ? renderImg('streak') : ''}${visible.languages ? renderImg('arsenal') : ''}${visible.trophies ? renderImg('trophies') : ''}${visible.art ? renderImg('art') : ''}
 </p>
 `;
       const repoName = displayProfile.login;
@@ -262,7 +258,11 @@ export default function App() {
       });
 
       if (pushRes.ok) {
-        setDeployStatus('✅ Success! Your GitHub profile is now live.');
+        if (!repoExists) {
+          setDeployStatus('✅ Success! Since this is a new profile, go to your GitHub repository and click the green "Share to Profile" button!');
+        } else {
+          setDeployStatus('✅ Success! Your GitHub profile is now live.');
+        }
       } else {
         throw new Error('Failed to update README.md');
       }
