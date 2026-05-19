@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { buildArtGrid, getTotalCols } from '@octovibe/core';
 import { getThemes } from '@octovibe/themes';
 
+// 0. GLOBAL AUTH LOCK: Prevents React 18 Strict Mode from consuming single-use OAuth codes twice
+let globalAuthPromise = null;
+
 export default function App() {
   const currentYear = new Date().getFullYear();
   const themesList  = getThemes();
@@ -92,33 +95,38 @@ export default function App() {
     const authCode = params.get('code');
 
     if (authCode) {
-      fetch('https://octovibe.vercel.app/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: authCode })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.access_token) {
-            localStorage.setItem('octovibe_token', data.access_token);
+      if (!globalAuthPromise) {
+        globalAuthPromise = fetch('https://octovibe.vercel.app/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: authCode })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.access_token) {
+              return fetch('https://api.github.com/user', {
+                headers: { 'Authorization': `Bearer ${data.access_token}` }
+              })
+                .then(r => r.json())
+                .then(userData => ({ token: data.access_token, user: userData.login }));
+            }
+            return null;
+          });
+      }
 
-            fetch('https://api.github.com/user', {
-              headers: { 'Authorization': `token ${data.access_token}` }
-            })
-              .then(r => r.json())
-              .then(userData => {
-                if (userData.login) {
-                  localStorage.setItem('octovibe_user', userData.login);
-                  
-                  // Synchronously lock memory flags to enforce clean layout hydration states
-                  setToken(data.access_token);
-                  setUsername(userData.login);
-                  window.history.replaceState({}, document.title, window.location.pathname);
-                  
-                  // Force direct data injection bypass to ignore stale reactive closures
-                  queryTelemetryPipeline(userData.login, data.access_token);
-                }
-              });
+      globalAuthPromise
+        .then(result => {
+          if (result && result.user) {
+            localStorage.setItem('octovibe_token', result.token);
+            localStorage.setItem('octovibe_user', result.user);
+            
+            // Synchronously lock memory flags to enforce clean layout hydration states
+            setToken(result.token);
+            setUsername(result.user);
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Force direct data injection bypass to ignore stale reactive closures
+            queryTelemetryPipeline(result.user, result.token);
           }
         })
         .catch(err => console.error('SaaS Identity token verification failed:', err));
