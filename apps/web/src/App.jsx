@@ -4,30 +4,33 @@ import { getThemes } from '@octovibe/themes';
 
 export default function App() {
   const currentYear = new Date().getFullYear();
-  const themesList = getThemes();
+  const themesList  = getThemes();
 
-  // Fine-Grained SaaS Multi-Tenant Authentication Session Hooks
-  const [token,    setToken]    = useState(localStorage.getItem('octovibe_token') || '');
-  const [username, setUsername] = useState(localStorage.getItem('octovibe_user')  || 'octovibe');
+  // 1. BOUNDARY INITIALIZATION: Lazy closures survive GitHub Pages routing resets
+  const [token,    setToken]    = useState(() => localStorage.getItem('octovibe_token') || '');
+  const [username, setUsername] = useState(() => localStorage.getItem('octovibe_user')  || 'octovibe');
 
   const [activeTheme, setActiveTheme] = useState('midnight-blue');
   const [heroLayout,  setHeroLayout]  = useState('minimalist');
   const [langLayout,  setLangLayout]  = useState('pipeline');
 
+  // Custom Control Canvas Variables
   const [artTitle, setArtTitle] = useState('OCTOVIBE VISUALS');
   const [artText,  setArtText]  = useState('CONNECTED');
   const [artStyle, setArtStyle] = useState('flat');
   const [artBg,    setArtBg]    = useState('0');
 
-  const [visible,      setVisible]      = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true });
-  const [profile,      setProfile]      = useState(null);
-  const [trophies,     setTrophies]     = useState([]);
+  // Interactive Security UX Feedback Flags
+  const [showAuthWarning, setShowAuthWarning] = useState(false);
+  const [visible,   setVisible]   = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true });
+  const [profile,   setProfile]   = useState(null);
+  const [trophies,  setTrophies]  = useState([]);
   const [renderedGrid, setRenderedGrid] = useState([]);
   const [artCommits,   setArtCommits]   = useState(0);
   const [copiedIndex,  setCopiedIndex]  = useState(null);
 
   const CLR_MAP   = ['#151b23', '#033a16', '#196c2e', '#2ea043', '#56d364'];
-  const MONS      = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONS      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const totalCols = getTotalCols(currentYear);
 
   const triggerGitHubLogin = () => {
@@ -41,17 +44,25 @@ export default function App() {
     setToken('');
     setUsername('octovibe');
     setProfile(null);
+    setShowAuthWarning(false);
   };
 
-  // Direct State Interceptor Payload Function Engine
-  // Accepts explicit parameters to bypass stale React state closures
-  const loadTelemetryProfile = (targetUser, targetToken) => {
-    const reqHeaders = { 'Content-Type': 'application/json' };
-    if (targetToken) {
-      reqHeaders['Authorization'] = `Bearer ${targetToken}`;
+  // Defensive Field Lock Wrapper Evaluator
+  const handleProtectedInput = (setValueAction, incomingValue) => {
+    if (!token || username === 'octovibe') {
+      setShowAuthWarning(true);
+      setTimeout(() => setShowAuthWarning(false), 4000);
+      return;
     }
+    setValueAction(incomingValue);
+  };
 
-    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&json=true&_t=${Date.now()}`, { headers: reqHeaders })
+  // Core Standalone Fetch Processor
+  const queryTelemetryPipeline = (targetUser, targetToken) => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (targetToken) headers['Authorization'] = `Bearer ${targetToken}`;
+
+    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&json=true&_t=${Date.now()}`, { headers })
       .then(res => res.json())
       .then(resData => {
         if (resData.profile) {
@@ -59,10 +70,10 @@ export default function App() {
           setTrophies(resData.trophies || []);
         }
       })
-      .catch(err => console.error('Telemetry query mapping layer pipeline exception:', err));
+      .catch(err => console.error('Telemetry proxy node communication error:', err));
   };
 
-  // Auth Handshake Hook Lifecycle
+  // Asynchronous Handshake Callback Interceptor Loop
   useEffect(() => {
     const params   = new URLSearchParams(window.location.search);
     const authCode = params.get('code');
@@ -78,7 +89,6 @@ export default function App() {
           if (data.access_token) {
             localStorage.setItem('octovibe_token', data.access_token);
 
-            // Securely fetch active credentials directly via GitHub core API
             fetch('https://api.github.com/user', {
               headers: { 'Authorization': `token ${data.access_token}` }
             })
@@ -87,31 +97,27 @@ export default function App() {
                 if (userData.login) {
                   localStorage.setItem('octovibe_user', userData.login);
 
-                  // Force reactive state overrides to trigger canvas updates layout
+                  // Force atomic sync hook state rewrites prior to cleaning URL queries
                   setToken(data.access_token);
                   setUsername(userData.login);
                   window.history.replaceState({}, document.title, window.location.pathname);
 
-                  // CRITICAL SAAS INTERCEPTOR FIX: Pass freshly fetched credentials directly
-                  // into the query executor, bypassing stale state update cycle delay
-                  loadTelemetryProfile(userData.login, data.access_token);
+                  // Push network query directly — bypasses stale state update cycle delay
+                  queryTelemetryPipeline(userData.login, data.access_token);
                 }
               });
           }
         })
-        .catch(err => console.error('SaaS Identity authorization state pipeline crashed:', err));
+        .catch(err => console.error('SaaS Token validation gateway crash:', err));
     }
   }, []);
 
-  // Standard Lifecycle Query Sync
+  // Standard Lifecycle Sync Hook
   useEffect(() => {
     const params      = new URLSearchParams(window.location.search);
     const hasAuthCode = params.get('code');
-
-    // Prevent the standard loading hook from firing duplicate public inquiries
-    // while an active auth loop is negotiating the token exchange
     if (!hasAuthCode) {
-      loadTelemetryProfile(username, token);
+      queryTelemetryPipeline(username, token);
     }
   }, [username, token]);
 
@@ -131,7 +137,7 @@ export default function App() {
   if (!profile) return (
     <div className="bg-[#010409] h-screen text-gray-400 p-8 font-mono flex flex-col items-center justify-center gap-4">
       <div className="w-9 h-9 border-4 border-[#388bfd] border-t-transparent rounded-full animate-spin"></div>
-      <span className="text-sm font-bold tracking-wide">Syncing authenticated data from serverless pipeline proxy...</span>
+      <span className="text-sm font-bold tracking-wide">Syncing authenticated workspace pipeline matrix profiles...</span>
     </div>
   );
 
@@ -145,28 +151,36 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#010409] text-gray-300 font-sans antialiased overflow-hidden select-none">
+    <div className="flex h-screen bg-[#010409] text-gray-300 font-sans antialiased overflow-hidden select-none relative">
 
-      {/* SIDEBAR CONFIGURATION CONSOLE */}
+      {/* SECURITY OVERLAY BANNER — fires when unauthenticated user edits a protected field */}
+      {showAuthWarning && (
+        <div className="absolute top-5 right-5 z-50 bg-amber-950/90 border border-amber-500 text-amber-300 px-4 py-3 rounded-xl flex items-center gap-3 shadow-2xl font-medium text-xs tracking-wide backdrop-blur">
+          <i className="fas fa-lock text-sm text-amber-400 animate-bounce"></i>
+          <span>Information is limited without authentication. Please log in for correct information.</span>
+        </div>
+      )}
+
+      {/* LEFT SIDEBAR MANAGEMENT HUB CONSOLE */}
       <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#388bfd] to-[#238636] flex items-center justify-center font-black text-white">🐙</div>
             <div>
-              <h1 className="text-sm font-bold text-white">OctoVibe Studio</h1>
-              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">SaaS Portal</p>
+              <h1 className="text-sm font-bold text-white">OctoVibe Portal</h1>
+              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">SaaS Engine</p>
             </div>
           </div>
 
           <div className="space-y-3">
-            {!token ? (
-              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-colors">
+            {username === 'octovibe' || !token ? (
+              <button onClick={triggerGitHubLogin} className="w-full bg-[#238636] hover:bg-[#2ea043] text-white font-bold py-2.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 shadow-md transition-all">
                 <i className="fab fa-github text-sm"></i> Connect GitHub Account
               </button>
             ) : (
               <div className="bg-black/20 border border-emerald-500/20 p-2.5 rounded-lg flex items-center justify-between">
                 <div className="truncate">
-                  <p className="text-[9px] uppercase font-bold text-emerald-400">Live Session Active</p>
+                  <p className="text-[9px] uppercase font-bold text-emerald-400">Live Tenant Session</p>
                   <p className="text-xs font-mono font-bold text-[#58a6ff] truncate mt-0.5">@{username}</p>
                 </div>
                 <button onClick={executeLogout} className="text-[10px] font-bold text-red-400 hover:text-white hover:bg-red-600 bg-red-500/5 px-2.5 py-1 rounded border border-red-500/20 transition-all">Sign Out</button>
@@ -175,7 +189,12 @@ export default function App() {
 
             <div className="pt-2">
               <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Explore Profile Handle</label>
-              <input type="text" value={username} onChange={e => setUsername(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none font-mono focus:border-[#58a6ff]" />
+              <input
+                type="text"
+                value={username}
+                onChange={e => handleProtectedInput(setUsername, e.target.value)}
+                className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none font-mono focus:border-[#58a6ff]"
+              />
             </div>
 
             <div>
@@ -188,7 +207,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Layout</label>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Hero Component Wireframe</label>
               <select value={heroLayout} onChange={e => setHeroLayout(e.target.value)} className="w-full bg-[#161b22] border border-[#30363d] rounded-md p-1.5 text-xs text-white outline-none">
                 <option value="minimalist">Ultra-Minimalist Profile</option>
                 <option value="terminal">Cyber-Terminal Console</option>
@@ -197,9 +216,21 @@ export default function App() {
             </div>
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
-              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Art</label>
-              <input type="text" value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
-              <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
+              <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
+              <input
+                type="text"
+                value={artTitle}
+                onChange={e => handleProtectedInput(setArtTitle, e.target.value)}
+                placeholder="Header Chart Title"
+                className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none"
+              />
+              <input
+                type="text"
+                value={artText}
+                onChange={e => setArtText(e.target.value.toUpperCase())}
+                placeholder="Text Pattern (A-Z)"
+                className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none"
+              />
               <div className="grid grid-cols-2 gap-1.5">
                 <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded"><option value="flat">2D Flat</option><option value="3d">3D Glass</option></select>
                 <select value={artBg}    onChange={e => setArtBg(e.target.value)}    className="bg-[#161b22] text-xs text-white p-1 rounded"><option value="0">Shade 0</option><option value="1">Shade 1</option><option value="2">Shade 2</option></select>
@@ -210,7 +241,7 @@ export default function App() {
         <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Studio Hub • SaaS Production</div>
       </aside>
 
-      {/* CONTINUOUS PREVIEW CANVAS */}
+      {/* CONTINUOUS PREVIEW CANVAS PANELS STREAM CONTAINER */}
       <main className="flex-1 overflow-y-auto p-10 space-y-6">
         <div className="p-8 rounded-xl border select-text" style={{ backgroundColor: p.background, borderColor: p.cardBorder }}>
           <div className="w-full space-y-8 max-w-[740px] mx-auto">
@@ -322,11 +353,11 @@ export default function App() {
           </div>
           <div className="space-y-2">
             {[
-              { label: 'Complete Identity Suite Snippet',       t: 'all',       ext: `&hero_layout=${heroLayout}` },
-              { label: '14+ Gamified Trophy Panel Matrix',      t: 'trophies',  ext: '' },
-              { label: 'Dynamic Language Fingerprint Chart',    t: 'languages', ext: `&lang_layout=${langLayout}` },
-              { label: 'Consistency Streak Counter Block',      t: 'streak',    ext: '' },
-              { label: 'Custom Typographic Contribution Grid Art', t: 'art',   ext: `&art_text=${artText}&art_style=${artStyle}&art_bg=${artBg}` }
+              { label: 'Complete Identity Suite Snippet',          t: 'all',       ext: `&hero_layout=${heroLayout}` },
+              { label: '14+ Gamified Trophy Panel Matrix',         t: 'trophies',  ext: '' },
+              { label: 'Dynamic Language Fingerprint Chart',       t: 'languages', ext: `&lang_layout=${langLayout}` },
+              { label: 'Consistency Streak Counter Block',         t: 'streak',    ext: '' },
+              { label: 'Custom Typographic Contribution Grid Art', t: 'art',       ext: `&art_text=${artText}&art_style=${artStyle}&art_bg=${artBg}` }
             ].map((item, idx) => {
               const str = `![OctoVibe](https://octovibe.vercel.app/api/render?user=${profile.login}&theme=${activeTheme}&view=${item.t}${item.ext})`;
               return (
