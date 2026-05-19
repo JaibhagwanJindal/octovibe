@@ -14,6 +14,7 @@ export default function App() {
   const [activeTheme, setActiveTheme] = useState('midnight-blue');
   const [heroLayout, setHeroLayout] = useState('minimalist');
   const [langLayout, setLangLayout] = useState('pipeline');
+  const [renderMode, setRenderMode] = useState('combined');
   
   const [artTitle, setArtTitle] = useState('OCTOVIBE VISUALS');
   const [artText, setArtText] = useState('CONNECTED');
@@ -182,6 +183,16 @@ export default function App() {
     if (type === 'trophies') ext = `&view=trophies`;
     if (type === 'art') ext = `&view=art&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}`;
     if (type === 'arsenal') ext = `&view=arsenal${stackQuery}`;
+    if (type === 'combined') {
+      const activeSectionsList = [];
+      if (visible.hero) activeSectionsList.push('hero');
+      if (visible.streak) activeSectionsList.push('streak');
+      if (visible.languages) activeSectionsList.push('arsenal');
+      if (visible.trophies) activeSectionsList.push('trophies');
+      if (visible.art) activeSectionsList.push('art');
+      const sectionsParam = activeSectionsList.join(',');
+      ext = `&view=combined&sections=${sectionsParam}${bioQuery}${stackQuery}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}`;
+    }
     return `${baseUrl}${ext}`;
   };
 
@@ -208,14 +219,24 @@ export default function App() {
     try {
       const baseUrl = `https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}`;
       
-      const renderImg = (type) => `<a href="https://github.com/JaibhagwanJindal/octovibe"><img src="${getEmbedUrl(type, baseUrl)}" alt="OctoVibe Metric" /></a>`;
+      let mdContent = '';
+      if (renderMode === 'combined') {
+        const renderImg = `<a href="https://github.com/JaibhagwanJindal/octovibe"><img src="${getEmbedUrl('combined', baseUrl)}" alt="OctoVibe Metric" /></a>`;
+        mdContent = `<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
 
-      const mdContent = `<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
+<p align="center">
+  ${renderImg}
+</p>
+`;
+      } else {
+        const renderImg = (type) => `<a href="https://github.com/JaibhagwanJindal/octovibe"><img src="${getEmbedUrl(type, baseUrl)}" alt="OctoVibe Metric" /></a>`;
+        mdContent = `<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
 
 <p align="center">
   ${renderImg('all')}${visible.streak ? renderImg('streak') : ''}${visible.languages ? renderImg('arsenal') : ''}${visible.trophies ? renderImg('trophies') : ''}${visible.art ? renderImg('art') : ''}
 </p>
 `;
+      }
       const repoName = displayProfile.login;
       let sha = null;
       let repoExists = true;
@@ -258,11 +279,7 @@ export default function App() {
       });
 
       if (pushRes.ok) {
-        if (!repoExists) {
-          setDeployStatus('✅ Success! Since this is a new profile, go to your GitHub repository and click the green "Share to Profile" button!');
-        } else {
-          setDeployStatus('✅ Success! Your GitHub profile is now live.');
-        }
+        setDeployStatus(`✅ Success! Your GitHub profile is now live. Visit github.com/${displayProfile.login} to view your stunning new telemetry board!`);
       } else {
         throw new Error('Failed to update README.md');
       }
@@ -313,6 +330,18 @@ export default function App() {
                 {themesList.map(t => (
                   <button key={t.id} onClick={() => setActiveTheme(t.id)} className="px-2 py-1 rounded text-[10px] font-bold bg-[#161b22]" style={{ border: activeTheme === t.id ? '1px solid white' : '1px solid transparent' }}>{t.name.split(' ')[0]}</button>
                 ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-1">Layout Rendering Mode</label>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button onClick={() => setRenderMode('combined')} className="px-2 py-1.5 rounded text-[10px] font-bold bg-[#161b22] text-gray-300 transition-all hover:text-white" style={{ border: renderMode === 'combined' ? '1px solid #58a6ff' : '1px solid transparent', color: renderMode === 'combined' ? '#58a6ff' : '' }}>
+                  <i className="fas fa-layer-group mr-1"></i> Unified Card
+                </button>
+                <button onClick={() => setRenderMode('individual')} className="px-2 py-1.5 rounded text-[10px] font-bold bg-[#161b22] text-gray-300 transition-all hover:text-white" style={{ border: renderMode === 'individual' ? '1px solid #58a6ff' : '1px solid transparent', color: renderMode === 'individual' ? '#58a6ff' : '' }}>
+                  <i className="fas fa-grip-horizontal mr-1"></i> Separate Cards
+                </button>
               </div>
             </div>
 
