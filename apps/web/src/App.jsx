@@ -69,7 +69,7 @@ export default function App() {
     }
 
     // Pass custom dropdown configurations safely into our unified API router parameters pass
-    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&json=true&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&_t=${Date.now()}`, { headers })
+    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&theme=${activeTheme}&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&json=true&_t=${Date.now()}`, { headers })
       .then(res => res.json())
       .then(resData => {
         if (resData.profile) {
@@ -144,20 +144,22 @@ export default function App() {
     if (!hasAuthCode) {
       queryTelemetryPipeline(username, token);
     }
-  }, [username, token, heroLayout, artStyle, artBg]);
+  }, [username, token, heroLayout, activeTheme, artStyle, artBg]);
 
   useEffect(() => {
     const gridData = buildArtGrid(artText, totalCols, artBg);
     setRenderedGrid(gridData);
     let commits = 0;
+    const remainderDays = new Date(currentYear, 11, 31).getDay() + 1;
     for (let r = 0; r < 7; r++) {
       for (let c = 0; c < totalCols; c++) {
+        if (c === totalCols - 1 && r >= remainderDays) continue;
         let lv = gridData[r]?.[c] ?? 0;
         commits += lv === 4 ? 5 : lv;
       }
     }
     setArtCommits(commits);
-  }, [artText, artBg, totalCols]);
+  }, [artText, artBg, totalCols, currentYear]);
 
   const displayProfile = profile || placeholderProfile;
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
@@ -341,6 +343,8 @@ export default function App() {
                           {Array.from({ length: totalCols }).map((_, cIdx) => (
                             <div key={cIdx} className="grid grid-rows-7 gap-[2px]">
                               {Array.from({ length: 7 }).map((_, rIdx) => {
+                                const remainderDays = new Date(currentYear, 11, 31).getDay() + 1;
+                                if (cIdx === totalCols - 1 && rIdx >= remainderDays) return null;
                                 const lv = renderedGrid[rIdx]?.[cIdx] ?? 0;
                                 if (artStyle === 'flat') {
                                   return <div key={rIdx} className="aspect-square w-full rounded-[1.5px]" style={{ backgroundColor: CLR_MAP[lv], border: lv === 0 ? '1px solid #21262d' : 'none' }} />;

@@ -110,10 +110,16 @@ async function fetchUserTelemetry(username, userToken = '') {
           }
         }
         y2025: contributionsCollection(from: "2025-01-01T00:00:00Z", to: "2025-12-31T23:59:59Z") {
-          contributionCalendar { totalContributions }
+          contributionCalendar {
+            totalContributions
+            weeks { contributionDays { contributionCount date } }
+          }
         }
         y2024: contributionsCollection(from: "2024-01-01T00:00:00Z", to: "2024-12-31T23:59:59Z") {
-          contributionCalendar { totalContributions }
+          contributionCalendar {
+            totalContributions
+            weeks { contributionDays { contributionCount date } }
+          }
         }
       }
     }`,
@@ -157,20 +163,18 @@ async function fetchUserTelemetry(username, userToken = '') {
       .sort((a, b) => b.percentage - a.percentage).slice(0, 4);
 
     // Compute absolute lifetime contributions by summing parallel multi-year collections variables
-    const c2026 = user.y2026?.contributionCalendar?.totalContributions || 0;
-    const c2025 = user.y2025?.contributionCalendar?.totalContributions || 0;
-    const c2024 = user.y2024?.contributionCalendar?.totalContributions || 0;
-    
-    // Core structural baseline mapping calculation adjustments for user JaibhagwanJindal
-    let absoluteLifetimeContributions = c2026 + c2025 + c2024 + 4; // Add 4 count mapping historic 2020-2022 constants traces
-    if (username.toLowerCase() === 'jaibhagwanjindal') {
-      absoluteLifetimeContributions = 1241;
-    }
+    let absoluteLifetimeContributions = (user.y2026?.contributionCalendar?.totalContributions || 0) + (user.y2025?.contributionCalendar?.totalContributions || 0) + (user.y2024?.contributionCalendar?.totalContributions || 0);
 
-    const calendar = user.y2026.contributionCalendar;
     let allDays = [];
-    calendar.weeks.forEach(w => { if (w.contributionDays) allDays = allDays.concat(w.contributionDays); });
-    allDays.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const weeks2026 = user.y2026?.contributionCalendar?.weeks || [];
+    const weeks2025 = user.y2025?.contributionCalendar?.weeks || [];
+    const weeks2024 = user.y2024?.contributionCalendar?.weeks || [];
+    [...weeks2024, ...weeks2025, ...weeks2026].forEach(w => { if (w.contributionDays) allDays = allDays.concat(w.contributionDays); });
+    
+    // Deduplicate overlapping ISO weeks from GitHub GraphQL overlapping years boundaries
+    const uniqueDays = new Map();
+    allDays.forEach(day => uniqueDays.set(day.date, day));
+    allDays = Array.from(uniqueDays.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let maxStreak = 0, currentStreak = 0, tempStreak = 0, activeDaysCount = 0;
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -190,10 +194,6 @@ async function fetchUserTelemetry(username, userToken = '') {
     });
 
     let finalMaxStreak = maxStreak;
-    if (username.toLowerCase() === 'jaibhagwanjindal') {
-      finalMaxStreak = 114; // Retain true verified historical multi-month max session streak records
-      currentStreak = 2;
-    }
 
     const consistencyPct = Math.round((activeDaysCount / (allDays.length || 1)) * 100);
     const consistencyGrade = consistencyPct > 40 ? "S" : consistencyPct > 25 ? "A+" : consistencyPct > 10 ? "B" : "C";
@@ -300,9 +300,11 @@ export default async function handler(req, res) {
     const CLR_ARRAY = ['#151b23', '#033a16', '#196c2e', '#2ea043', '#56d364'];
     const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
+    const remainderDays = new Date(new Date().getFullYear(), 11, 31).getDay() + 1;
     let gridCells = '';
     for (let c = 0; c < totalCols; c++) {
       for (let r = 0; r < 7; r++) {
+        if (c === totalCols - 1 && r >= remainderDays) continue;
         const lv = grid[r]?.[c] || 0;
         let x = c * (cellWidth + cellGap) + 50;
         let y = r * (cellWidth + cellGap) + 60;
