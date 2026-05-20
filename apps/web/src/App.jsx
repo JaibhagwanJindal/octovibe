@@ -391,7 +391,7 @@ ${socialsHtml}`;
         mdContent = `<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
 
 <p align="center">
-  ${renderImg('all')}${visible.streak ? renderImg('streak') : ''}${visible.languages ? renderImg('arsenal') : ''}${visible.trophies ? renderImg('trophies') : ''}${visible.art ? renderImg('art') : ''}
+  ${visible.hero ? renderImg('all') : ''}${visible.streak ? renderImg('streak') : ''}${visible.languages ? renderImg('arsenal') : ''}${visible.trophies ? renderImg('trophies') : ''}${visible.art ? renderImg('art') : ''}
 </p>
 ${socialsHtml}`;
       }
@@ -500,6 +500,36 @@ ${socialsHtml}`;
                 <button onClick={() => setRenderMode('individual')} className="px-2 py-1.5 rounded text-[10px] font-bold bg-[#161b22] text-gray-300 transition-all hover:text-white" style={{ border: renderMode === 'individual' ? '1px solid #58a6ff' : '1px solid transparent', color: renderMode === 'individual' ? '#58a6ff' : '' }}>
                   <i className="fas fa-grip-horizontal mr-1"></i> Separate Cards
                 </button>
+              </div>
+            </div>
+
+            <div className="border-t border-[#21262d] pt-3">
+              <label className="block text-[10px] font-bold uppercase text-gray-400 mb-2">Active Profile Modules</label>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
+                <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-gray-500 hover:text-gray-300 cursor-pointer select-none transition-colors">
+                  <input type="checkbox" checked={visible.hero ?? true} onChange={e => setVisible(prev => ({ ...prev, hero: e.target.checked }))} className="w-3 h-3 rounded bg-[#161b22] border-[#30363d] text-[#58a6ff] focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                  Hero Profile
+                </label>
+                <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-gray-500 hover:text-gray-300 cursor-pointer select-none transition-colors">
+                  <input type="checkbox" checked={visible.metrics ?? true} onChange={e => setVisible(prev => ({ ...prev, metrics: e.target.checked }))} className="w-3 h-3 rounded bg-[#161b22] border-[#30363d] text-[#58a6ff] focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                  Metrics Grid
+                </label>
+                <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-gray-500 hover:text-gray-300 cursor-pointer select-none transition-colors">
+                  <input type="checkbox" checked={visible.streak ?? true} onChange={e => setVisible(prev => ({ ...prev, streak: e.target.checked }))} className="w-3 h-3 rounded bg-[#161b22] border-[#30363d] text-[#58a6ff] focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                  Streak Tiles
+                </label>
+                <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-gray-500 hover:text-gray-300 cursor-pointer select-none transition-colors">
+                  <input type="checkbox" checked={visible.languages ?? true} onChange={e => setVisible(prev => ({ ...prev, languages: e.target.checked }))} className="w-3 h-3 rounded bg-[#161b22] border-[#30363d] text-[#58a6ff] focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                  Ecosystem Stack
+                </label>
+                <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-gray-500 hover:text-gray-300 cursor-pointer select-none transition-colors">
+                  <input type="checkbox" checked={visible.trophies ?? true} onChange={e => setVisible(prev => ({ ...prev, trophies: e.target.checked }))} className="w-3 h-3 rounded bg-[#161b22] border-[#30363d] text-[#58a6ff] focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                  Milestones
+                </label>
+                <label className="flex items-center gap-1.5 text-[9px] font-bold uppercase text-gray-500 hover:text-gray-300 cursor-pointer select-none transition-colors">
+                  <input type="checkbox" checked={visible.art ?? true} onChange={e => setVisible(prev => ({ ...prev, art: e.target.checked }))} className="w-3 h-3 rounded bg-[#161b22] border-[#30363d] text-[#58a6ff] focus:ring-0 focus:ring-offset-0 cursor-pointer" />
+                  Contribution Art
+                </label>
               </div>
             </div>
 

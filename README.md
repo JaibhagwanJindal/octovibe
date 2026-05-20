@@ -46,6 +46,12 @@ Easily input, toggle, and integrate interactive, micro-animated, glassmorphic so
 * **Pixel-Perfect Vector Icons**: Supported platforms include **Instagram** | **Facebook** | **Threads** | **LinkedIn** | **X (formerly Twitter)** | **Medium** | **Blog** | **Website**.
 * **Cohesive Theme Aesthetics**: Dynamically renders 32x32px themed vector badges that automatically adapt to your active stylesheet HSL colors!
 
+### 🎨 GitHub Contribution Art Grid
+Simulate the native GitHub green contribution calendar to map custom typography and design grids over 53 columns:
+* **Dynamic Text-to-Pixel Mapping**: Instantly translates word strings (e.g. `OCTOVIBE`, `HELLO`) into pixel intensities from 0 to 4.
+* **Layout Aesthetics Selection**: Swap seamlessly between flat pixel grids and premium rounded 3D glass columns that catch active theme HSL coordinates.
+* **Month & Date Offsets Alignments**: Center Month badges (`Jan` to `Dec`) properly aligned to the standard chronological boundaries.
+
 ---
 
 ## 🛠️ Monorepo Architecture
@@ -84,6 +90,9 @@ If you prefer to manually embed specific panels, copy the Markdown snippets belo
 
 <!-- Trophies Showcase Grid -->
 [![OctoVibe Trophies](https://octovibe.vercel.app/api/render?user=YOUR_USERNAME&view=trophies&theme=active_theme)](https://github.com/JaibhagwanJindal/octovibe)
+
+<!-- Contribution Grid Art -->
+[![OctoVibe Grid Art](https://octovibe.vercel.app/api/render?user=YOUR_USERNAME&view=art&theme=active_theme&art_title=OCTOVIBE&art_text=OCTOVIBE&art_style=3d)](https://github.com/JaibhagwanJindal/octovibe)
 ```
 
 ---
