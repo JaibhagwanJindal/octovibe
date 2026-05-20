@@ -330,19 +330,17 @@ export default async function handler(req, res) {
   
   else if (view === 'trophies') {
     let cardItems = trophies.map((t, i) => {
-      let x = (i % 3) * 250 + 10; let y = Math.floor(i / 3) * 90 + 10;
+      let x = (i % 7) * 105 + 25; let y = Math.floor(i / 7) * 105 + 15;
       let glowId = t.label.toLowerCase();
       return `<g transform="translate(${x}, ${y})">
-        <rect width="240" height="80" rx="10" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1.5"/>
-        <circle cx="40" cy="40" r="22" fill="${p.background}" stroke="${t.color}" stroke-width="1.5" filter="url(#glow-${glowId})"/>
-        <g transform="translate(28, 28)">
+        <rect width="90" height="90" rx="16" fill="${p.cardBg}" stroke="${t.color}" stroke-opacity="0.3" stroke-width="1.5" filter="url(#glow-${glowId})"/>
+        <g transform="translate(21, 21) scale(2.0)">
           ${renderTrophyIcon(t.id, t.color)}
         </g>
-        <text x="75" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="12" font-weight="bold">${escapeXML(t.title)}</text>
-        <text x="75" y="55" fill="${t.color}" font-family="sans-serif" font-size="10" font-weight="bold">${t.label} Tier</text>
+        <circle cx="76" cy="14" r="3" fill="${t.color}"/>
       </g>`;
     }).join('');
-    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="770" height="${Math.ceil(trophies.length / 3) * 90 + 20}">
+    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="770" height="${Math.ceil(trophies.length / 7) * 105 + 25}">
       <defs>
         <filter id="glow-bronze" x="-30%" y="-30%" width="160%" height="160%">
           <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#cd7f32" flood-opacity="0.5"/>
@@ -551,20 +549,18 @@ export default async function handler(req, res) {
       }
       else if (section === 'trophies') {
         if (trophies.length === 0) continue;
-        const sectionHeight = Math.ceil(trophies.length / 3) * 90 + 50;
+        const sectionHeight = Math.ceil(trophies.length / 7) * 105 + 55;
         const hasDivider = currentY > 0;
 
         let cardItems = trophies.map((t, i) => {
-          let x = (i % 3) * 250 + 20; let y = Math.floor(i / 3) * 90 + 40;
+          let x = (i % 7) * 105 + 30; let y = Math.floor(i / 7) * 105 + 40;
           let glowId = t.label.toLowerCase();
           return `<g transform="translate(${x}, ${y})">
-            <rect width="240" height="80" rx="10" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1.5"/>
-            <circle cx="40" cy="40" r="22" fill="${p.background}" stroke="${t.color}" stroke-width="1.5" filter="url(#glow-${glowId})"/>
-            <g transform="translate(28, 28)">
+            <rect width="90" height="90" rx="16" fill="${p.cardBg}" stroke="${t.color}" stroke-opacity="0.3" stroke-width="1.5" filter="url(#glow-${glowId})"/>
+            <g transform="translate(21, 21) scale(2.0)">
               ${renderTrophyIcon(t.id, t.color)}
             </g>
-            <text x="75" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="12" font-weight="bold">${escapeXML(t.title)}</text>
-            <text x="75" y="55" fill="${t.color}" font-family="sans-serif" font-size="10" font-weight="bold">${t.label} Tier</text>
+            <circle cx="76" cy="14" r="3" fill="${t.color}"/>
           </g>`;
         }).join('');
 
