@@ -158,7 +158,7 @@ export default function App() {
   const totalCols = getTotalCols(currentYear);
 
   const placeholderProfile = {
-    name: "OctoVibe Studio", login: "octovibe", avatarUrl: "/logo.png", bio: "The ultimate open-source multi-tenant developer profile customizer hub.", location: "Global Edge Network", followers: 128, repos: 24, stars: 86, commits: 918, currentStreak: 4, longestStreak: 48, consistencyGrade: "B"
+    name: "OctoVibe Studio", login: "octovibe", avatarUrl: "logo.png", bio: "The ultimate open-source multi-tenant developer profile customizer hub.", location: "Global Edge Network", followers: 128, repos: 24, stars: 86, commits: 918, currentStreak: 4, longestStreak: 48, consistencyGrade: "B"
   };
 
   const triggerGitHubLogin = () => {
@@ -419,7 +419,7 @@ export default function App() {
       <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
-            <img src="/logo.png" className="w-8 h-8 rounded-lg object-contain" alt="OctoVibe Logo" />
+            <img src="logo.png" className="w-8 h-8 rounded-lg object-contain" alt="OctoVibe Logo" />
             <div><h1 className="text-sm font-bold text-white tracking-wide">OctoVibe</h1><p className="text-[10px] text-gray-500 uppercase font-black tracking-wider">Gamified Developer Telemetry</p></div>
           </div>
 
@@ -504,7 +504,7 @@ export default function App() {
               <div className="w-full">
                 {heroLayout === 'minimalist' && (
                   <div className="text-center py-2 animate-fadeIn">
-                    <img src={displayProfile.avatarUrl || '/logo.png'} onError={(e) => { e.target.src = '/logo.png'; }} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
+                    <img src={displayProfile.avatarUrl || 'logo.png'} onError={(e) => { e.target.src = 'logo.png'; }} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
                     <h2 className="text-2xl font-black text-white tracking-tight mt-3">{displayProfile.name}</h2>
                     <p className="text-sm font-mono font-bold" style={{ color: p.primaryColor }}>@{displayProfile.login}</p>
                     <p className="text-xs text-gray-300 mt-2 font-medium max-w-xl mx-auto">{displayBio}</p>
@@ -519,7 +519,7 @@ export default function App() {
                 )}
                 {heroLayout === 'corporate' && (
                   <div className="flex items-center gap-6 p-5 rounded-xl" style={{ backgroundColor: p.cardBg }}>
-                    <img src={displayProfile.avatarUrl || '/logo.png'} onError={(e) => { e.target.src = '/logo.png'; }} className="w-16 h-16 rounded-xl border shadow" style={{ borderColor: p.cardBorder }} alt="" />
+                    <img src={displayProfile.avatarUrl || 'logo.png'} onError={(e) => { e.target.src = 'logo.png'; }} className="w-16 h-16 rounded-xl border shadow" style={{ borderColor: p.cardBorder }} alt="" />
                     <div className="space-y-0.5">
                       <h3 className="text-lg font-bold text-white">{displayProfile.name}</h3>
                       <p className="text-xs text-gray-400">@{displayProfile.login} • {displayProfile.location}</p>
@@ -652,7 +652,7 @@ export default function App() {
                           title={`${t.title} (${t.label} Tier) — Progress: ${t.value}`}
                         >
                           <img 
-                            src={`/assets/trophies/${t.id}_${t.label.toLowerCase()}.svg`} 
+                            src={`assets/trophies/${t.id}_${t.label.toLowerCase()}.svg`} 
                             alt={t.title} 
                             className="w-16 h-16 object-contain filter drop-shadow-[0_0_6px_rgba(0,0,0,0.3)] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[6deg]"
                           />
@@ -812,7 +812,7 @@ export default function App() {
                         {/* Trophy Icon Area */}
                         <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center relative">
                           <img 
-                            src={`/assets/trophies/${id}_${isLocked ? 'bronze' : prog.currentTier}.svg`} 
+                            src={`assets/trophies/${id}_${isLocked ? 'bronze' : prog.currentTier}.svg`} 
                             alt={title} 
                             className={`w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(0,0,0,0.4)] ${isLocked ? 'grayscale opacity-30 brightness-50' : ''}`}
                           />

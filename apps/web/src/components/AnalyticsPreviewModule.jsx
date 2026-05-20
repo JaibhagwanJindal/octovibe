@@ -216,8 +216,8 @@ export default function AnalyticsPreviewModule({ username }) {
               <div className="space-y-6">
                 <div className="flex items-center gap-6">
                   <img 
-                    src={profile.avatarUrl || '/logo.png'} 
-                    onError={(e) => { e.target.src = '/logo.png'; }} 
+                    src={profile.avatarUrl || 'logo.png'} 
+                    onError={(e) => { e.target.src = 'logo.png'; }} 
                     className="w-20 h-20 rounded-full border-4 shadow-md" 
                     style={{ borderColor: p.primaryColor }} 
                     alt="" 
@@ -289,7 +289,7 @@ export default function AnalyticsPreviewModule({ username }) {
                           title={`${t.title} (${t.label} Tier) — Progress: ${t.value}`}
                         >
                           <img 
-                            src={`/assets/trophies/${t.id}_${t.label.toLowerCase()}.svg`} 
+                            src={`assets/trophies/${t.id}_${t.label.toLowerCase()}.svg`} 
                             alt={t.title} 
                             className="w-20 h-20 object-contain filter drop-shadow-[0_0_6px_rgba(0,0,0,0.3)] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[6deg]"
                           />
@@ -465,7 +465,7 @@ export default function AnalyticsPreviewModule({ username }) {
                         {/* Trophy Icon Area */}
                         <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center relative">
                           <img 
-                            src={`/assets/trophies/${id}_${isLocked ? 'bronze' : prog.currentTier}.svg`} 
+                            src={`assets/trophies/${id}_${isLocked ? 'bronze' : prog.currentTier}.svg`} 
                             alt={title} 
                             className={`w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(0,0,0,0.4)] ${isLocked ? 'grayscale opacity-30 brightness-50' : ''}`}
                           />
