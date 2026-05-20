@@ -122,6 +122,34 @@ export default function App() {
   const currentYear = new Date().getFullYear();
   const themesList = getThemes();
 
+  const generateMockGrid = (seedStr = 'octovibe') => {
+    let hash = 0;
+    for (let i = 0; i < seedStr.length; i++) {
+      hash = seedStr.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const grid = [];
+    const remainderDays = (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0)) ? 2 : 1;
+    for (let r = 0; r < 7; r++) {
+      const row = [];
+      for (let c = 0; c < 53; c++) {
+        if (c === 52 && r >= remainderDays) {
+          row.push(0);
+          continue;
+        }
+        const val = Math.abs(Math.sin(hash + r * 13 + c * 37));
+        hash = (hash + r + c) % 1000000;
+        let lv = 0;
+        if (val > 0.90) lv = 4;
+        else if (val > 0.75) lv = 3;
+        else if (val > 0.55) lv = 2;
+        else if (val > 0.30) lv = 1;
+        row.push(lv);
+      }
+      grid.push(row);
+    }
+    return grid;
+  };
+
   const [token, setToken] = useState(() => localStorage.getItem('octovibe_token') || '');
   const [username, setUsername] = useState(() => localStorage.getItem('octovibe_user') || 'octovibe');
   
@@ -134,6 +162,7 @@ export default function App() {
   const [artText, setArtText] = useState('CONNECTED');
   const [artStyle, setArtStyle] = useState('flat');
   const [artBg, setArtBg] = useState('0');
+  const [artMode, setArtMode] = useState('text'); // 'text' or 'history'
 
   const [customBio, setCustomBio] = useState('');
   const [langStr, setLangStr] = useState('JavaScript, TypeScript, Python, HTML5, CSS3, C++');
@@ -194,7 +223,7 @@ export default function App() {
     }
 
     // Pass custom dropdown configurations safely into our unified API router parameters pass
-    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&theme=${activeTheme}&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&json=true&_t=${Date.now()}`, { headers })
+    fetch(`https://octovibe.vercel.app/api/render?user=${targetUser}&theme=${activeTheme}&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&art_mode=${artMode}&json=true&_t=${Date.now()}`, { headers })
       .then(res => res.json())
       .then(resData => {
         if (resData.profile) {
@@ -269,27 +298,36 @@ export default function App() {
     if (!hasAuthCode) {
       queryTelemetryPipeline(username, token);
     }
-  }, [username, token, heroLayout, activeTheme, artStyle, artBg]);
-
-  useEffect(() => {
-    const gridData = buildArtGrid(artText, totalCols, artBg);
-    setRenderedGrid(gridData);
-    let commits = 0;
-    const remainderDays = (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0)) ? 2 : 1;
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < totalCols; c++) {
-        if (c === totalCols - 1 && r >= remainderDays) continue;
-        let lv = gridData[r]?.[c] ?? 0;
-        commits += lv === 4 ? 5 : lv;
-      }
-    }
-    setArtCommits(commits);
-  }, [artText, artBg, totalCols, currentYear]);
+  }, [username, token, heroLayout, activeTheme, artStyle, artBg, artMode]);
 
   const displayProfile = profile || placeholderProfile;
   const displayBio = customBio || displayProfile.bio;
   const earnedTrophies = calculateAllTrophies(displayProfile);
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
+
+  useEffect(() => {
+    if (artMode === 'history') {
+      if (displayProfile && displayProfile.contributionGrid) {
+        setRenderedGrid(displayProfile.contributionGrid);
+      } else {
+        const mockGrid = generateMockGrid(displayProfile.login || 'octovibe');
+        setRenderedGrid(mockGrid);
+      }
+    } else {
+      const gridData = buildArtGrid(artText, totalCols, artBg);
+      setRenderedGrid(gridData);
+      let commits = 0;
+      const remainderDays = (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0)) ? 2 : 1;
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < totalCols; c++) {
+          if (c === totalCols - 1 && r >= remainderDays) continue;
+          let lv = gridData[r]?.[c] ?? 0;
+          commits += lv === 4 ? 5 : lv;
+        }
+      }
+      setArtCommits(commits);
+    }
+  }, [artText, artBg, totalCols, currentYear, artMode, displayProfile]);
 
   const getEmbedUrl = (type, baseUrl) => {
     let ext = '';
@@ -312,7 +350,7 @@ export default function App() {
     if (type === 'all') ext = `&hero_layout=${heroLayout}${bioQuery}${socialQuery}`;
     if (type === 'streak') ext = `&view=streak`;
     if (type === 'trophies') ext = `&view=trophies`;
-    if (type === 'art') ext = `&view=art&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}`;
+    if (type === 'art') ext = `&view=art&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}&art_mode=${artMode}`;
     if (type === 'arsenal') ext = `&view=arsenal${stackQuery}`;
     if (type === 'combined') {
       const activeSectionsList = [];
@@ -322,7 +360,7 @@ export default function App() {
       if (visible.trophies) activeSectionsList.push('trophies');
       if (visible.art) activeSectionsList.push('art');
       const sectionsParam = activeSectionsList.join(',');
-      ext = `&view=combined&sections=${sectionsParam}${bioQuery}${stackQuery}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}${socialQuery}`;
+      ext = `&view=combined&sections=${sectionsParam}${bioQuery}${stackQuery}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}${socialQuery}&art_mode=${artMode}`;
     }
     return `${baseUrl}${ext}`;
   };
@@ -607,12 +645,31 @@ ${socialsHtml}`;
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
               <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
-              <input type="text" value={artTitle} onChange={e => handleProtectedField(setArtTitle, e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
-              <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
-              <div className="grid grid-cols-2 gap-1.5">
-                <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded"><option value="flat">2D Flat</option><option value="3d">3D Glass</option></select>
-                <select value={artBg} onChange={e => setArtBg(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded"><option value="0">Shade 0</option><option value="1">Shade 1</option><option value="2">Shade 2</option></select>
+              
+              <div className="grid grid-cols-2 gap-1.5 items-center">
+                <span className="text-[10px] font-bold text-gray-400">ART MODE</span>
+                <select value={artMode} onChange={e => setArtMode(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded border border-[#30363d] outline-none">
+                  <option value="text">Custom Text</option>
+                  <option value="history">Live Calendar</option>
+                </select>
               </div>
+
+              <input type="text" value={artTitle} onChange={e => handleProtectedField(setArtTitle, e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none focus:border-[#58a6ff]" />
+              
+              {artMode === 'text' ? (
+                <>
+                  <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none focus:border-[#58a6ff]" />
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded border border-[#30363d] outline-none"><option value="flat">2D Flat</option><option value="3d">3D Glass</option></select>
+                    <select value={artBg} onChange={e => setArtBg(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded border border-[#30363d] outline-none"><option value="0">Shade 0</option><option value="1">Shade 1</option><option value="2">Shade 2</option></select>
+                  </div>
+                </>
+              ) : (
+                <div className="grid grid-cols-2 gap-1.5">
+                  <select value={artStyle} onChange={e => setArtStyle(e.target.value)} className="bg-[#161b22] text-xs text-white p-1 rounded border border-[#30363d] outline-none"><option value="flat">2D Flat</option><option value="3d">3D Glass</option></select>
+                  <span className="text-[10px] text-gray-500 self-center italic">Live Git history</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -877,7 +934,7 @@ ${socialsHtml}`;
                 <div className="p-5 rounded-xl border shadow-xl bg-[#0d1117] w-full border-[#30363d]">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="text-xs font-bold text-gray-300">Contribution Grid Art — <span className="text-[#56d364] font-black">{artTitle}</span></h4>
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1f3456] text-[#58a6ff] border border-[#388bfd] rounded">2026</span>
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-[#1f3456] text-[#58a6ff] border border-[#388bfd] rounded">{artMode === 'history' ? 'LIVE' : '2026'}</span>
                   </div>
                   <div className="w-full overflow-x-auto">
                     <div className="w-full flex flex-col gap-1 select-none">
@@ -913,7 +970,11 @@ ${socialsHtml}`;
                     </div>
                   </div>
                   <div className="mt-4 flex items-center justify-between text-[10px] text-gray-400 border-t border-[#21262d] pt-3">
-                    <span><b>{artCommits}</b> commits required to forge this layout template block footprint.</span>
+                    {artMode === 'history' ? (
+                      <span><b>{displayProfile.commits || 0}</b> total contributions recorded in the last year.</span>
+                    ) : (
+                      <span><b>{artCommits}</b> commits required to forge this layout template block footprint.</span>
+                    )}
                     <div className="flex items-center gap-1 select-none">
                       <span className="text-[9px] mr-1 text-gray-500">Less</span>
                       {CLR_MAP.map((c, i) => <div key={i} className="w-2.5 h-2.5 rounded-[1px]" style={{ backgroundColor: c, border: i === 0 ? '1px solid #21262d' : 'none' }} />)}

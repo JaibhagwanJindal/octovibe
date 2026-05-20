@@ -95,6 +95,69 @@ function renderTrophyIcon(id, color) {
   return icons[id] || icons.stars;
 }
 
+function generateMockGrid(seedStr = 'octovibe') {
+  let hash = 0;
+  for (let i = 0; i < seedStr.length; i++) {
+    hash = seedStr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const grid = [];
+  const currentYear = new Date().getFullYear();
+  const remainderDays = (currentYear % 4 === 0 && (currentYear % 100 !== 0 || currentYear % 400 === 0)) ? 2 : 1;
+  for (let r = 0; r < 7; r++) {
+    const row = [];
+    for (let c = 0; c < 53; c++) {
+      if (c === 52 && r >= remainderDays) {
+        row.push(0);
+        continue;
+      }
+      const val = Math.abs(Math.sin(hash + r * 13 + c * 37));
+      hash = (hash + r + c) % 1000000;
+      let lv = 0;
+      if (val > 0.90) lv = 4;
+      else if (val > 0.75) lv = 3;
+      else if (val > 0.55) lv = 2;
+      else if (val > 0.30) lv = 1;
+      row.push(lv);
+    }
+    grid.push(row);
+  }
+  return grid;
+}
+
+function buildContributionGrid(allDays) {
+  const grid = Array.from({ length: 7 }, () => Array(53).fill(0));
+  if (allDays.length === 0) return grid;
+  
+  const lastIndex = allDays.length - 1;
+  const lastDay = allDays[lastIndex];
+  const lastDate = new Date(lastDay.date);
+  let r = lastDate.getUTCDay(); // 0-6
+  let c = 52;
+  
+  for (let i = lastIndex; i >= 0; i--) {
+    if (c < 0) break;
+    const day = allDays[i];
+    const count = day.contributionCount || 0;
+    
+    let lv = 0;
+    if (count > 0) {
+      if (count <= 2) lv = 1;
+      else if (count <= 5) lv = 2;
+      else if (count <= 8) lv = 3;
+      else lv = 4;
+    }
+    
+    grid[r][c] = lv;
+    
+    r--;
+    if (r < 0) {
+      r = 6;
+      c--;
+    }
+  }
+  return grid;
+}
+
 async function fetchUserTelemetry(username, userToken = '') {
   const activeToken = userToken || process.env.GITHUB_TOKEN || '';
   
@@ -119,7 +182,8 @@ async function fetchUserTelemetry(username, userToken = '') {
       { name: 'TypeScript', percentage: 60, color: '#3178c6' },
       { name: 'JavaScript', percentage: 30, color: '#f1e05a' },
       { name: 'HTML', percentage: 10, color: '#e34c26' }
-    ]
+    ],
+    contributionGrid: generateMockGrid('JaibhagwanJindal')
   };
 
   if (!activeToken && username.toLowerCase() !== 'octovibe') {
@@ -127,7 +191,7 @@ async function fetchUserTelemetry(username, userToken = '') {
   }
 
   if (username.toLowerCase() === 'octovibe' || !activeToken) {
-    return { ...fallbackData, name: "OctoVibe Studio", login: "octovibe", avatarUrl: "https://github.com/identicons/octovibe.png", commits: 918, repos: 24, stars: 86, currentStreak: 4, longestStreak: 48, consistencyGrade: "B" };
+    return { ...fallbackData, name: "OctoVibe Studio", login: "octovibe", avatarUrl: "https://github.com/identicons/octovibe.png", commits: 918, repos: 24, stars: 86, currentStreak: 4, longestStreak: 48, consistencyGrade: "B", contributionGrid: generateMockGrid('octovibe') };
   }
 
   // GraphQL query mapping precise chronological calendar multi-year timeline spans
@@ -267,7 +331,8 @@ async function fetchUserTelemetry(username, userToken = '') {
       currentStreak: currentStreak,
       longestStreak: finalMaxStreak,
       consistencyGrade: consistencyGrade,
-      topLanguages: topLanguages.length > 0 ? topLanguages : [{ name: 'TypeScript', percentage: 100, color: '#3178c6' }]
+      topLanguages: topLanguages.length > 0 ? topLanguages : [{ name: 'TypeScript', percentage: 100, color: '#3178c6' }],
+      contributionGrid: buildContributionGrid(allDays)
     };
   } catch (err) {
     return fallbackData;
@@ -322,6 +387,7 @@ export default async function handler(req, res) {
     art_bg = '0', 
     art_text = 'CONNECTED', 
     art_title = 'OCTOVIBE VISUALS', 
+    art_mode = 'text',
     bio = '', 
     langs = '', 
     frames = '', 
@@ -554,7 +620,8 @@ export default async function handler(req, res) {
 
   else if (view === 'art') {
     const totalCols = 53;
-    const grid = buildArtGrid(art_text, totalCols, art_bg);
+    const isHistory = art_mode === 'history';
+    const grid = isHistory ? (data.contributionGrid || generateMockGrid(user)) : buildArtGrid(art_text, totalCols, art_bg);
     let cellWidth = art_style === 'flat' ? 11 : 14;
     let cellGap = art_style === 'flat' ? 2 : 4;
     let svgWidth = totalCols * (cellWidth + cellGap) + 100;
@@ -567,7 +634,7 @@ export default async function handler(req, res) {
     let gridCells = '';
     for (let c = 0; c < totalCols; c++) {
       for (let r = 0; r < 7; r++) {
-        if (c === totalCols - 1 && r >= remainderDays) continue;
+        if (!isHistory && c === totalCols - 1 && r >= remainderDays) continue;
         const lv = grid[r]?.[c] || 0;
         let x = c * (cellWidth + cellGap) + 50;
         let y = r * (cellWidth + cellGap) + 60;
@@ -584,7 +651,7 @@ export default async function handler(req, res) {
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="190">
       <rect width="100%" height="100%" fill="${p.background}" rx="12" stroke="${p.cardBorder}" stroke-width="1"/>
       <text x="30" y="35" fill="${p.textPrimary}" font-family="sans-serif" font-size="13" font-weight="bold">${escapeXML(art_title)}</text>
-      <g transform="translate(${svgWidth - 90}, 23)"><rect width="50" height="18" rx="4" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="1"/><text x="25" y="13" fill="${p.textPrimary}" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">2026</text></g>
+      <g transform="translate(${svgWidth - 90}, 23)"><rect width="50" height="18" rx="4" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="1"/><text x="25" y="13" fill="${p.textPrimary}" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">${isHistory ? 'LIVE' : '2026'}</text></g>
       ${monthHeaders}${gridCells}
     </svg>`;
   }
@@ -745,7 +812,8 @@ export default async function handler(req, res) {
         const sectionHeight = 175;
         const hasDivider = currentY > 0;
         const totalCols = 53;
-        const grid = buildArtGrid(art_text, totalCols, art_bg);
+        const isHistory = art_mode === 'history';
+        const grid = isHistory ? (data.contributionGrid || generateMockGrid(user)) : buildArtGrid(art_text, totalCols, art_bg);
         let cellWidth = art_style === 'flat' ? 11 : 14;
         let cellGap = art_style === 'flat' ? 2 : 4;
         let originalArtWidth = totalCols * (cellWidth + cellGap) + 100;
@@ -758,7 +826,7 @@ export default async function handler(req, res) {
         let gridCells = '';
         for (let c = 0; c < totalCols; c++) {
           for (let r = 0; r < 7; r++) {
-            if (c === totalCols - 1 && r >= remainderDays) continue;
+            if (!isHistory && c === totalCols - 1 && r >= remainderDays) continue;
             const lv = grid[r]?.[c] || 0;
             let x = c * (cellWidth + cellGap) + 50;
             let y = r * (cellWidth + cellGap) + 50;
@@ -779,7 +847,7 @@ export default async function handler(req, res) {
           ${hasDivider ? `<line x1="20" y1="${currentY}" x2="760" y2="${currentY}" stroke="${p.cardBorder}" stroke-width="1"/>` : ''}
           <g transform="translate(0, ${currentY})">
             <text x="30" y="25" fill="${p.textPrimary}" font-family="sans-serif" font-size="13" font-weight="bold">${escapeXML(art_title)}</text>
-            <g transform="translate(690, 13)"><rect width="50" height="18" rx="4" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="1"/><text x="25" y="13" fill="${p.textPrimary}" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">2026</text></g>
+            <g transform="translate(690, 13)"><rect width="50" height="18" rx="4" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="1"/><text x="25" y="13" fill="${p.textPrimary}" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">${isHistory ? 'LIVE' : '2026'}</text></g>
             <g transform="translate(0, 5) scale(${scaleFactor})">
               ${monthHeaders}
               ${gridCells}
