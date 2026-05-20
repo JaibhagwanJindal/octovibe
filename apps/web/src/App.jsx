@@ -1,8 +1,122 @@
 import React, { useState, useEffect } from 'react';
-import { buildArtGrid, getTotalCols } from '@octovibe/core';
+import { buildArtGrid, getTotalCols, calculateAllTrophies } from '@octovibe/core';
 import { getThemes } from '@octovibe/themes';
 
 let globalAuthPromise = null;
+
+const TROPHY_THRESHOLDS = {
+  stars: { bronze: 10, silver: 100, gold: 500, platinum: 1000 },
+  commits: { bronze: 100, silver: 1000, gold: 5000, platinum: 10000 },
+  repos: { bronze: 5, silver: 20, gold: 50, platinum: 100 },
+  forks: { bronze: 5, silver: 25, gold: 100, platinum: 500 },
+  prs: { bronze: 5, silver: 25, gold: 100, platinum: 250 },
+  reviews: { bronze: 2, silver: 10, gold: 50, platinum: 200 },
+  issues: { bronze: 5, silver: 20, gold: 100, platinum: 500 },
+  discussions: { bronze: 1, silver: 5, gold: 20, platinum: 50 },
+  polyglot: { bronze: 3, silver: 5, gold: 8, platinum: 12 },
+  longevity: { bronze: 1, silver: 3, gold: 5, platinum: 8 },
+  nightowl: { bronze: 10, silver: 25, gold: 50, platinum: 75 },
+  earlybird: { bronze: 10, silver: 25, gold: 50, platinum: 75 },
+  docs: { bronze: 5, silver: 25, gold: 100, platinum: 500 },
+  gists: { bronze: 2, silver: 10, gold: 30, platinum: 70 },
+};
+
+const TROPHY_DESCRIPTIONS = {
+  stars: "Total repository stargaze collections",
+  commits: "Chronological pushed commit volume",
+  repos: "Public code repositories maintained",
+  forks: "Telemetry metrics of code distribution",
+  prs: "Constructive pull requests integrated",
+  reviews: "Quality assurance peer inspections",
+  issues: "System ticket management tasks",
+  discussions: "Community architectural conversations",
+  polyglot: "Diverse programming languages utilized",
+  longevity: "Annual sequence platform consistency",
+  nightowl: "Late-night contribution activity ratio",
+  earlybird: "Early-morning contribution activity ratio",
+  docs: "Constructive documentation adjustments",
+  gists: "Snippets of useful tools published",
+};
+
+const TROPHY_TITLES = {
+  stars: "Star Lord",
+  commits: "Commit Monster",
+  repos: "Prolific Creator",
+  forks: "Fork Magnet",
+  prs: "Open Architect",
+  reviews: "Code Auditor",
+  issues: "Bug Crusher",
+  discussions: "The Oracle",
+  polyglot: "The Polyglot",
+  longevity: "The Ancient One",
+  nightowl: "The Night Owl",
+  earlybird: "The Early Bird",
+  docs: "The Documentarian",
+  gists: "Gist Genius",
+};
+
+function getTrophyProgressInfo(id, rawValue) {
+  const thresh = TROPHY_THRESHOLDS[id];
+  if (!thresh) return null;
+  
+  const value = rawValue || 0;
+  let currentTier = 'locked';
+  let color = '#4b5563'; // gray-600
+  let nextTier = 'bronze';
+  let nextThreshold = thresh.bronze;
+  let prevThreshold = 0;
+  let isMaxed = false;
+  
+  if (value >= thresh.platinum) {
+    currentTier = 'platinum';
+    color = '#e5e4e2';
+    isMaxed = true;
+  } else if (value >= thresh.gold) {
+    currentTier = 'gold';
+    color = '#ffd700';
+    nextTier = 'platinum';
+    nextThreshold = thresh.platinum;
+    prevThreshold = thresh.gold;
+  } else if (value >= thresh.silver) {
+    currentTier = 'silver';
+    color = '#c0c0c0';
+    nextTier = 'gold';
+    nextThreshold = thresh.gold;
+    prevThreshold = thresh.silver;
+  } else if (value >= thresh.bronze) {
+    currentTier = 'bronze';
+    color = '#cd7f32';
+    nextTier = 'silver';
+    nextThreshold = thresh.silver;
+    prevThreshold = thresh.bronze;
+  } else {
+    currentTier = 'locked';
+    color = '#4b5563';
+    nextTier = 'bronze';
+    nextThreshold = thresh.bronze;
+    prevThreshold = 0;
+  }
+  
+  let percentage = 0;
+  if (isMaxed) {
+    percentage = 100;
+  } else {
+    const range = nextThreshold - prevThreshold;
+    const progress = Math.max(0, value - prevThreshold);
+    percentage = Math.min(100, Math.floor((progress / range) * 100));
+  }
+  
+  return {
+    currentTier,
+    color,
+    nextTier,
+    nextThreshold,
+    prevThreshold,
+    isMaxed,
+    percentage,
+    text: isMaxed ? 'MAX TIER UNLOCKED 🎉' : `${value} / ${nextThreshold} to ${nextTier.toUpperCase()}`
+  };
+}
 
 export default function App() {
   const currentYear = new Date().getFullYear();
@@ -37,13 +151,14 @@ export default function App() {
   
   const [isDeploying, setIsDeploying] = useState(false);
   const [deployStatus, setDeployStatus] = useState('');
+  const [showTrophyModal, setShowTrophyModal] = useState(false);
 
   const CLR_MAP = ['#151b23', '#033a16', '#196c2e', '#2ea043', '#56d364'];
   const MONS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const totalCols = getTotalCols(currentYear);
 
   const placeholderProfile = {
-    name: "OctoVibe Studio", login: "octovibe", avatarUrl: "https://github.com/identicons/octovibe.png", bio: "The ultimate open-source multi-tenant developer profile customizer hub.", location: "Global Edge Network", followers: 128, repos: 24, stars: 86, commits: 918, currentStreak: 4, longestStreak: 48, consistencyGrade: "B"
+    name: "OctoVibe Studio", login: "octovibe", avatarUrl: "/logo.png", bio: "The ultimate open-source multi-tenant developer profile customizer hub.", location: "Global Edge Network", followers: 128, repos: 24, stars: 86, commits: 918, currentStreak: 4, longestStreak: 48, consistencyGrade: "B"
   };
 
   const triggerGitHubLogin = () => {
@@ -172,6 +287,7 @@ export default function App() {
 
   const displayProfile = profile || placeholderProfile;
   const displayBio = customBio || displayProfile.bio;
+  const earnedTrophies = calculateAllTrophies(displayProfile);
   const p = (themesList.find(t => t.id === activeTheme) || themesList[0]).palette;
 
   const getEmbedUrl = (type, baseUrl) => {
@@ -303,8 +419,8 @@ export default function App() {
       <aside className="w-80 bg-[#0d1117] border-r border-[#30363d] p-5 flex flex-col justify-between overflow-y-auto flex-shrink-0">
         <div className="space-y-5">
           <div className="flex items-center gap-3 border-b border-[#21262d] pb-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#388bfd] to-[#238636] flex items-center justify-center font-black text-white">🐙</div>
-            <div><h1 className="text-sm font-bold text-white">OctoVibe Portal</h1><p className="text-[10px] text-gray-500 uppercase font-black">SaaS Core</p></div>
+            <img src="/logo.png" className="w-8 h-8 rounded-lg object-contain" alt="OctoVibe Logo" />
+            <div><h1 className="text-sm font-bold text-white tracking-wide">OctoVibe</h1><p className="text-[10px] text-gray-500 uppercase font-black tracking-wider">Gamified Developer Telemetry</p></div>
           </div>
 
           <div className="space-y-3">
@@ -377,7 +493,7 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Studio Hub • SaaS Production</div>
+        <div className="text-[10px] text-gray-500 font-bold border-t border-[#21262d] pt-3">OctoVibe Studio Hub • Developer Telemetry</div>
       </aside>
 
       <main className="flex-1 overflow-y-auto p-10 space-y-6">
@@ -388,7 +504,7 @@ export default function App() {
               <div className="w-full">
                 {heroLayout === 'minimalist' && (
                   <div className="text-center py-2 animate-fadeIn">
-                    <img src={displayProfile.avatarUrl} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
+                    <img src={displayProfile.avatarUrl || '/logo.png'} onError={(e) => { e.target.src = '/logo.png'; }} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
                     <h2 className="text-2xl font-black text-white tracking-tight mt-3">{displayProfile.name}</h2>
                     <p className="text-sm font-mono font-bold" style={{ color: p.primaryColor }}>@{displayProfile.login}</p>
                     <p className="text-xs text-gray-300 mt-2 font-medium max-w-xl mx-auto">{displayBio}</p>
@@ -403,7 +519,7 @@ export default function App() {
                 )}
                 {heroLayout === 'corporate' && (
                   <div className="flex items-center gap-6 p-5 rounded-xl" style={{ backgroundColor: p.cardBg }}>
-                    <img src={displayProfile.avatarUrl} className="w-16 h-16 rounded-xl border shadow" style={{ borderColor: p.cardBorder }} alt="" />
+                    <img src={displayProfile.avatarUrl || '/logo.png'} onError={(e) => { e.target.src = '/logo.png'; }} className="w-16 h-16 rounded-xl border shadow" style={{ borderColor: p.cardBorder }} alt="" />
                     <div className="space-y-0.5">
                       <h3 className="text-lg font-bold text-white">{displayProfile.name}</h3>
                       <p className="text-xs text-gray-400">@{displayProfile.login} • {displayProfile.location}</p>
@@ -500,15 +616,50 @@ export default function App() {
 
             {visible.trophies && (
               <div className="p-5 rounded-xl border bg-black/10 w-full animate-fadeIn" style={{ borderColor: p.cardBorder }}>
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Earned Platform Rewards</h4>
-                {trophies.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-3">
-                    {trophies.map((t, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl border" style={{ backgroundColor: p.cardBg, borderColor: p.cardBorder }}>
-                        <div className="w-9 h-9 rounded-full bg-[#010409] flex items-center justify-center text-xs" style={{ color: t.color }}><i className={`fas ${t.icon}`} /></div>
-                        <div><h5 className="text-xs font-bold text-white leading-none">{t.title}</h5><p className="text-[9px] font-black tracking-wider uppercase mt-1" style={{ color: t.color }}>{t.label} Tier</p></div>
-                      </div>
-                    ))}
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div>
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Earned Platform Rewards</h4>
+                    <p className="text-[10px] text-gray-500 font-medium mt-0.5">Represented visually by their tier colors. Hover for details.</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowTrophyModal(true)} 
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold rounded bg-slate-900/60 hover:bg-slate-950/80 border border-[#30363d] text-white hover:text-[#58a6ff] hover:scale-105 active:scale-95 transition-all select-none"
+                  >
+                    <i className="fas fa-circle-info text-sky-400"></i> Trophy Milestones Guide
+                  </button>
+                </div>
+
+                {earnedTrophies.length > 0 ? (
+                  <div className="flex flex-wrap gap-4 justify-start">
+                    {earnedTrophies.map((t, i) => {
+                      const tierGlowColor = t.color;
+                      return (
+                        <div 
+                          key={i} 
+                          className="relative w-24 h-24 flex items-center justify-center rounded-2xl border transition-all duration-300 bg-[#0B0F19]/60 backdrop-blur-sm group hover:scale-[1.06]"
+                          style={{ 
+                            borderColor: `${tierGlowColor}33`,
+                            boxShadow: `0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 12px ${tierGlowColor}10`
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = tierGlowColor;
+                            e.currentTarget.style.boxShadow = `0 0 20px ${tierGlowColor}30, inset 0 0 16px ${tierGlowColor}15`;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = `${tierGlowColor}33`;
+                            e.currentTarget.style.boxShadow = `0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 12px ${tierGlowColor}10`;
+                          }}
+                          title={`${t.title} (${t.label} Tier) — Progress: ${t.value}`}
+                        >
+                          <img 
+                            src={`/assets/trophies/${t.id}_${t.label.toLowerCase()}.svg`} 
+                            alt={t.title} 
+                            className="w-16 h-16 object-contain filter drop-shadow-[0_0_6px_rgba(0,0,0,0.3)] transition-transform duration-500 group-hover:scale-110 group-hover:rotate-[6deg]"
+                          />
+                          <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tierGlowColor, boxShadow: `0 0 6px ${tierGlowColor}` }}></div>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-xs text-gray-500 italic font-medium">Connect your account session to view gamified reward milestones.</p>
@@ -597,6 +748,143 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* GLASSMORPHIC TROPHY MILESTONES GUIDE POPUP MODAL */}
+      {showTrophyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md overflow-y-auto animate-fadeIn select-text">
+          <div className="relative bg-[#0d1117]/95 border border-[#30363d] rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl animate-scaleUp">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-[#30363d] bg-[#161b22]/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ffd700] to-[#cd7f32] flex items-center justify-center shadow-lg text-black">
+                  <i className="fas fa-trophy text-lg animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white tracking-wide">OctoVibe Trophies & Milestones Guide</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Track your progress toward higher developer status tiers</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowTrophyModal(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#21262d] hover:bg-[#30363d] text-gray-400 hover:text-white border border-[#30363d] transition-all hover:scale-105"
+              >
+                <i className="fas fa-xmark text-sm" />
+              </button>
+            </div>
+
+            {/* Modal Content - Scrollable Grid */}
+            <div className="p-6 overflow-y-auto flex-1 bg-black/10 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.keys(TROPHY_THRESHOLDS).map((id) => {
+                  let val = 0;
+                  if (id === 'stars') val = displayProfile.stars;
+                  else if (id === 'commits') val = displayProfile.commits;
+                  else if (id === 'repos') val = displayProfile.repos;
+                  else if (id === 'forks') val = displayProfile.forks || 0;
+                  else if (id === 'prs') val = displayProfile.prs || 0;
+                  else if (id === 'reviews') val = displayProfile.reviews || 0;
+                  else if (id === 'issues') val = displayProfile.issues || 0;
+                  else if (id === 'discussions') val = displayProfile.discussions || 0;
+                  else if (id === 'polyglot') val = displayProfile.languagesCount || 0;
+                  else if (id === 'longevity') val = displayProfile.accountAgeYears || 0;
+                  else if (id === 'nightowl') val = displayProfile.nightCommitRatio || 0;
+                  else if (id === 'earlybird') val = displayProfile.earlyCommitRatio || 0;
+                  else if (id === 'docs') val = displayProfile.docsChangesK || 0;
+                  else if (id === 'gists') val = displayProfile.gists || 0;
+
+                  const title = TROPHY_TITLES[id];
+                  const description = TROPHY_DESCRIPTIONS[id];
+                  const prog = getTrophyProgressInfo(id, val);
+
+                  const isLocked = prog.currentTier === 'locked';
+                  const tierColor = prog.color;
+
+                  return (
+                    <div 
+                      key={id} 
+                      className={`p-4 rounded-xl border transition-all duration-300 ${isLocked ? 'bg-[#161b22]/30 border-dashed border-gray-800' : 'bg-[#0B0F19]/80 border-[#30363d]'}`}
+                      style={{ 
+                        borderColor: isLocked ? '' : `${tierColor}33`,
+                        boxShadow: isLocked ? 'none' : `0 4px 12px rgba(0, 0, 0, 0.4), inset 0 0 10px ${tierColor}05`
+                      }}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Trophy Icon Area */}
+                        <div className="w-14 h-14 flex-shrink-0 flex items-center justify-center relative">
+                          <img 
+                            src={`/assets/trophies/${id}_${isLocked ? 'bronze' : prog.currentTier}.svg`} 
+                            alt={title} 
+                            className={`w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(0,0,0,0.4)] ${isLocked ? 'grayscale opacity-30 brightness-50' : ''}`}
+                          />
+                          {isLocked && (
+                            <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                              <i className="fas fa-lock text-xs bg-[#0d1117] p-1.5 rounded-full border border-gray-800" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Text and Status Info */}
+                        <div className="flex-1 space-y-0.5">
+                          <div className="flex items-center justify-between">
+                            <h4 className={`text-xs font-black tracking-wide ${isLocked ? 'text-gray-500' : 'text-slate-100'}`}>{title}</h4>
+                            <span 
+                              className="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border"
+                              style={{ 
+                                backgroundColor: isLocked ? '#1f293720' : `${tierColor}15`, 
+                                color: isLocked ? '#6b7280' : tierColor,
+                                borderColor: isLocked ? '#37415130' : `${tierColor}30` 
+                              }}
+                            >
+                              {isLocked ? 'Locked' : `${prog.currentTier} tier`}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-gray-400 font-medium leading-normal">{description}</p>
+                          <p className="text-[10px] font-semibold font-mono text-gray-500 mt-1">Current telemetry: <span className={isLocked ? 'text-gray-400' : 'text-white'}>{val}</span></p>
+                        </div>
+                      </div>
+
+                      {/* Progress bar and Thresholds list */}
+                      <div className="mt-3.5 pt-3.5 border-t border-[#30363d]/40 space-y-2">
+                        <div className="flex justify-between items-center text-[9px] font-bold font-mono">
+                          <span className="text-gray-400 uppercase tracking-widest">Progress</span>
+                          <span style={{ color: isLocked ? '#9ca3af' : tierColor }}>{prog.text}</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-[#010409] rounded-full overflow-hidden border border-white/5">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${prog.percentage}%`, 
+                              backgroundColor: isLocked ? '#4b5563' : tierColor,
+                              boxShadow: isLocked ? 'none' : `0 0 6px ${tierColor}`
+                            }}
+                          />
+                        </div>
+                        {/* Threshold details */}
+                        <div className="flex justify-between text-[8px] font-mono text-gray-500 pt-0.5">
+                          <span>Bronze: {TROPHY_THRESHOLDS[id].bronze}</span>
+                          <span>Silver: {TROPHY_THRESHOLDS[id].silver}</span>
+                          <span>Gold: {TROPHY_THRESHOLDS[id].gold}</span>
+                          <span>Plat: {TROPHY_THRESHOLDS[id].platinum}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-[#30363d] bg-[#161b22]/30 flex justify-end">
+              <button 
+                onClick={() => setShowTrophyModal(false)}
+                className="px-5 py-1.5 text-xs font-bold rounded-lg bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] text-white transition-all active:scale-95"
+              >
+                Close Guide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
