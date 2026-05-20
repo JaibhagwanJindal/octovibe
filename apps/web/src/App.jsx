@@ -141,7 +141,8 @@ export default function App() {
   const [cloudStr, setCloudStr] = useState('Firebase, PostgreSQL, AWS, Vercel, Docker');
 
   const [showAuthWarning, setShowAuthWarning] = useState(false);
-  const [visible, setVisible] = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true });
+  const [visible, setVisible] = useState({ hero: true, metrics: true, streak: true, languages: true, trophies: true, art: true, socials: true });
+  const [socials, setSocials] = useState({ instagram: '', facebook: '', threads: '', linkedin: '', x: '', medium: '', blog: '', website: '' });
   
   const [profile, setProfile] = useState(null);
   const [trophies, setTrophies] = useState([]);
@@ -294,7 +295,21 @@ export default function App() {
     let ext = '';
     const bioQuery = customBio ? `&bio=${encodeURIComponent(customBio)}` : '';
     const stackQuery = `&langs=${encodeURIComponent(langStr)}&frames=${encodeURIComponent(frameStr)}&cloud=${encodeURIComponent(cloudStr)}`;
-    if (type === 'all') ext = `&hero_layout=${heroLayout}${bioQuery}`;
+    
+    const activeSocialParams = [];
+    if (visible.socials) {
+      if (socials.instagram) activeSocialParams.push(`instagram=${encodeURIComponent(socials.instagram)}`);
+      if (socials.facebook) activeSocialParams.push(`facebook=${encodeURIComponent(socials.facebook)}`);
+      if (socials.threads) activeSocialParams.push(`threads=${encodeURIComponent(socials.threads)}`);
+      if (socials.linkedin) activeSocialParams.push(`linkedin=${encodeURIComponent(socials.linkedin)}`);
+      if (socials.x) activeSocialParams.push(`x=${encodeURIComponent(socials.x)}`);
+      if (socials.medium) activeSocialParams.push(`medium=${encodeURIComponent(socials.medium)}`);
+      if (socials.blog) activeSocialParams.push(`blog=${encodeURIComponent(socials.blog)}`);
+      if (socials.website) activeSocialParams.push(`website=${encodeURIComponent(socials.website)}`);
+    }
+    const socialQuery = activeSocialParams.length > 0 ? `&${activeSocialParams.join('&')}` : '';
+
+    if (type === 'all') ext = `&hero_layout=${heroLayout}${bioQuery}${socialQuery}`;
     if (type === 'streak') ext = `&view=streak`;
     if (type === 'trophies') ext = `&view=trophies`;
     if (type === 'art') ext = `&view=art&hero_layout=${heroLayout}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}`;
@@ -307,7 +322,7 @@ export default function App() {
       if (visible.trophies) activeSectionsList.push('trophies');
       if (visible.art) activeSectionsList.push('art');
       const sectionsParam = activeSectionsList.join(',');
-      ext = `&view=combined&sections=${sectionsParam}${bioQuery}${stackQuery}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}`;
+      ext = `&view=combined&sections=${sectionsParam}${bioQuery}${stackQuery}&art_style=${artStyle}&art_bg=${artBg}&art_title=${encodeURIComponent(artTitle)}&art_text=${encodeURIComponent(artText)}${socialQuery}`;
     }
     return `${baseUrl}${ext}`;
   };
@@ -483,6 +498,57 @@ export default function App() {
             </div>
 
             <div className="border-t border-[#21262d] pt-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-[10px] font-bold uppercase text-gray-400">Social Connections</label>
+                <div className="flex items-center gap-1.5">
+                  <input 
+                    type="checkbox" 
+                    id="visible-socials" 
+                    checked={visible.socials ?? true} 
+                    onChange={e => setVisible(prev => ({ ...prev, socials: e.target.checked }))} 
+                    className="w-3 h-3 rounded bg-[#161b22] border-[#30363d] text-[#58a6ff] focus:ring-0 focus:ring-offset-0 cursor-pointer" 
+                  />
+                  <label htmlFor="visible-socials" className="text-[9px] font-bold uppercase text-gray-500 cursor-pointer select-none">Show</label>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fab fa-instagram" /></span>
+                  <input type="text" value={socials.instagram} onChange={e => setSocials(prev => ({ ...prev, instagram: e.target.value }))} placeholder="Instagram URL" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fab fa-facebook" /></span>
+                  <input type="text" value={socials.facebook} onChange={e => setSocials(prev => ({ ...prev, facebook: e.target.value }))} placeholder="Facebook URL" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fas fa-at" /></span>
+                  <input type="text" value={socials.threads} onChange={e => setSocials(prev => ({ ...prev, threads: e.target.value }))} placeholder="Threads URL" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fab fa-linkedin" /></span>
+                  <input type="text" value={socials.linkedin} onChange={e => setSocials(prev => ({ ...prev, linkedin: e.target.value }))} placeholder="LinkedIn URL" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fab fa-x-twitter" /></span>
+                  <input type="text" value={socials.x} onChange={e => setSocials(prev => ({ ...prev, x: e.target.value }))} placeholder="X / Twitter" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fab fa-medium" /></span>
+                  <input type="text" value={socials.medium} onChange={e => setSocials(prev => ({ ...prev, medium: e.target.value }))} placeholder="Medium URL" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fas fa-pen-nib" /></span>
+                  <input type="text" value={socials.blog} onChange={e => setSocials(prev => ({ ...prev, blog: e.target.value }))} placeholder="Blog URL" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px]"><i className="fas fa-globe" /></span>
+                  <input type="text" value={socials.website} onChange={e => setSocials(prev => ({ ...prev, website: e.target.value }))} placeholder="Website URL" className="w-full bg-[#161b22] border border-[#30363d] rounded-md pl-6 pr-2 py-1.5 text-[10px] text-white outline-none focus:border-[#58a6ff] placeholder-gray-600 transition-colors" />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-[#21262d] pt-3 space-y-2">
               <label className="block text-[10px] font-bold uppercase text-gray-400">Contribution Grid Generator</label>
               <input type="text" value={artTitle} onChange={e => handleProtectedField(setArtTitle, e.target.value)} placeholder="Header Chart Title" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
               <input type="text" value={artText} onChange={e => setArtText(e.target.value.toUpperCase())} placeholder="Text Pattern (A-Z)" className="w-full bg-[#161b22] border border-[#30363d] rounded-md px-3 py-1.5 text-xs text-white outline-none" />
@@ -500,34 +566,115 @@ export default function App() {
         <div className="p-8 rounded-xl border select-text" style={{ backgroundColor: p.background, borderColor: p.cardBorder }}>
           <div className="w-full space-y-8 max-w-[740px] mx-auto">
             
-            {visible.hero && (
-              <div className="w-full">
-                {heroLayout === 'minimalist' && (
-                  <div className="text-center py-2 animate-fadeIn">
-                    <img src={displayProfile.avatarUrl || 'logo.png'} onError={(e) => { e.target.src = 'logo.png'; }} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
-                    <h2 className="text-2xl font-black text-white tracking-tight mt-3">{displayProfile.name}</h2>
-                    <p className="text-sm font-mono font-bold" style={{ color: p.primaryColor }}>@{displayProfile.login}</p>
-                    <p className="text-xs text-gray-300 mt-2 font-medium max-w-xl mx-auto">{displayBio}</p>
-                  </div>
-                )}
-                {heroLayout === 'terminal' && (
-                  <div className="bg-black/40 rounded-xl p-5 border font-mono text-[11px] space-y-1" style={{ borderColor: p.cardBorder }}>
-                    <p><span className="text-emerald-400">visitor@octovibe:~#</span> fetch info --user @{displayProfile.login}</p>
-                    <p className="pl-4 text-gray-300">{`{ "name": "${displayProfile.name}", "repositories": ${displayProfile.repos} }`}</p>
-                    <p className="pl-4 text-gray-300">{`{ "bio": "${displayBio}" }`}</p>
-                  </div>
-                )}
-                {heroLayout === 'corporate' && (
-                  <div className="flex items-center gap-6 p-5 rounded-xl" style={{ backgroundColor: p.cardBg }}>
-                    <img src={displayProfile.avatarUrl || 'logo.png'} onError={(e) => { e.target.src = 'logo.png'; }} className="w-16 h-16 rounded-xl border shadow" style={{ borderColor: p.cardBorder }} alt="" />
-                    <div className="space-y-0.5">
-                      <h3 className="text-lg font-bold text-white">{displayProfile.name}</h3>
-                      <p className="text-xs text-gray-400">@{displayProfile.login} • {displayProfile.location}</p>
+            {(() => {
+              const activeSocials = [
+                { id: 'instagram', url: socials.instagram, icon: 'fab fa-instagram' },
+                { id: 'facebook', url: socials.facebook, icon: 'fab fa-facebook' },
+                { id: 'threads', url: socials.threads, icon: 'fas fa-at' },
+                { id: 'linkedin', url: socials.linkedin, icon: 'fab fa-linkedin' },
+                { id: 'x', url: socials.x, icon: 'fab fa-x-twitter' },
+                { id: 'medium', url: socials.medium, icon: 'fab fa-medium' },
+                { id: 'blog', url: socials.blog, icon: 'fas fa-pen-nib' },
+                { id: 'website', url: socials.website, icon: 'fas fa-globe' }
+              ].filter(s => s.url);
+
+              return visible.hero && (
+                <div className="w-full">
+                  {heroLayout === 'minimalist' && (
+                    <div className="text-center py-2 animate-fadeIn">
+                      <img src={displayProfile.avatarUrl || 'logo.png'} onError={(e) => { e.target.src = 'logo.png'; }} className="w-20 h-20 rounded-full mx-auto border-4" style={{ borderColor: p.primaryColor }} alt="" />
+                      <h2 className="text-2xl font-black text-white tracking-tight mt-3">{displayProfile.name}</h2>
+                      <p className="text-sm font-mono font-bold" style={{ color: p.primaryColor }}>@{displayProfile.login}</p>
+                      <p className="text-xs text-gray-300 mt-2 font-medium max-w-xl mx-auto">{displayBio}</p>
+                      {visible.socials && activeSocials.length > 0 && (
+                        <div className="flex items-center justify-center gap-2 mt-4">
+                          {activeSocials.map(s => (
+                            <a 
+                              key={s.id} 
+                              href={s.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="w-7 h-7 rounded-lg flex items-center justify-center border transition-all duration-300 hover:scale-110" 
+                              style={{ 
+                                backgroundColor: p.cardBg, 
+                                borderColor: p.cardBorder,
+                                color: p.textSecondary
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = p.primaryColor;
+                                e.currentTarget.style.color = p.primaryColor;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = p.cardBorder;
+                                e.currentTarget.style.color = p.textSecondary;
+                              }}
+                            >
+                              <i className={`${s.icon} text-xs`} />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                  {heroLayout === 'terminal' && (
+                    <div className="bg-black/40 rounded-xl p-5 border font-mono text-[11px] space-y-1" style={{ borderColor: p.cardBorder }}>
+                      <p><span className="text-emerald-400">visitor@octovibe:~#</span> fetch info --user @{displayProfile.login}</p>
+                      <p className="pl-4 text-gray-300">{`{ "name": "${displayProfile.name}", "repositories": ${displayProfile.repos} }`}</p>
+                      <p className="pl-4 text-gray-300">{`{ "bio": "${displayBio}" }`}</p>
+                      {visible.socials && activeSocials.length > 0 && (
+                        <p className="pl-4 text-emerald-400 font-mono">
+                          {`{ "socials": [ `}
+                          {activeSocials.map((s, idx) => (
+                            <span key={s.id}>
+                              <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:underline text-cyan-400">"{s.id}"</a>
+                              {idx < activeSocials.length - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                          {` ] }`}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {heroLayout === 'corporate' && (
+                    <div className="flex items-center gap-6 p-5 rounded-xl animate-fadeIn" style={{ backgroundColor: p.cardBg }}>
+                      <img src={displayProfile.avatarUrl || 'logo.png'} onError={(e) => { e.target.src = 'logo.png'; }} className="w-16 h-16 rounded-xl border shadow" style={{ borderColor: p.cardBorder }} alt="" />
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-bold text-white">{displayProfile.name}</h3>
+                        <p className="text-xs text-gray-400">@{displayProfile.login} • {displayProfile.location}</p>
+                        {visible.socials && activeSocials.length > 0 && (
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            {activeSocials.map(s => (
+                              <a 
+                                key={s.id} 
+                                href={s.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="w-6 h-6 rounded-md flex items-center justify-center border transition-all duration-300 hover:scale-110" 
+                                style={{ 
+                                  backgroundColor: p.background, 
+                                  borderColor: p.cardBorder,
+                                  color: p.textSecondary
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor = p.primaryColor;
+                                  e.currentTarget.style.color = p.primaryColor;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = p.cardBorder;
+                                  e.currentTarget.style.color = p.textSecondary;
+                                }}
+                              >
+                                <i className={`${s.icon} text-[10px]`} />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* INTEGRATED CARD SUMMARY USER MATRIX TOOLTIPS */}
             {visible.metrics && (

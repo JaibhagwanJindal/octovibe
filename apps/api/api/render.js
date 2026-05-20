@@ -281,7 +281,41 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { user = 'octovibe', theme = 'midnight-blue', view = 'all', json = 'false', hero_layout = 'minimalist', art_style = 'flat', art_bg = '0', art_text = 'CONNECTED', art_title = 'OCTOVIBE VISUALS', bio = '', langs = '', frames = '', cloud = '', sections = 'hero,streak,arsenal,trophies,art' } = req.query;
+  const { 
+    user = 'octovibe', 
+    theme = 'midnight-blue', 
+    view = 'all', 
+    json = 'false', 
+    hero_layout = 'minimalist', 
+    art_style = 'flat', 
+    art_bg = '0', 
+    art_text = 'CONNECTED', 
+    art_title = 'OCTOVIBE VISUALS', 
+    bio = '', 
+    langs = '', 
+    frames = '', 
+    cloud = '', 
+    sections = 'hero,streak,arsenal,trophies,art',
+    instagram = '',
+    facebook = '',
+    threads = '',
+    linkedin = '',
+    x = '',
+    medium = '',
+    blog = '',
+    website = ''
+  } = req.query;
+
+  const SOCIAL_PATHS = {
+    instagram: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z",
+    facebook: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
+    threads: "M12 24C5.4 24 0 18.6 0 12S5.4 0 12 0s12 5.4 12 12-5.4 12-12 12zm0-22c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm4.5 13.5c-.8.8-1.9 1.2-3.1 1.2-1.5 0-2.8-.7-3.4-1.8-.6-1.1-.7-2.6-.2-3.9.5-1.3 1.5-2.2 2.8-2.7 1.3-.5 2.8-.3 3.9.2.7.3 1.2.8 1.6 1.4l-1.6 1c-.2-.4-.5-.7-.9-.9-.5-.2-1.1-.3-1.7-.1-.6.2-1.1.7-1.3 1.3-.2.6-.2 1.3.1 1.9.3.6.8.9 1.5.9.6 0 1.1-.2 1.5-.6.4-.4.6-.9.6-1.5v-1.6h-2.1v-1.8H18v4.2c0 1.2-.4 2.2-1.2 3.1z",
+    linkedin: "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
+    x: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
+    medium: "M13.54 12a6.8 6.8 0 01-6.77 6.82A6.8 6.8 0 010 12a6.8 6.8 0 016.77-6.82A6.8 6.8 0 0113.54 12zm5.9 0c0 3.5-1.3 6.33-2.95 6.33S13.54 15.5 13.54 12s1.3-6.33 2.95-6.33 2.95 2.83 2.95 6.33zm2.56 0c0 3.03-.4 5.5-1 5.5s-1-2.47-1-5.5.4-5.5 1-5.5 1 2.47 1 5.5z",
+    blog: "M12.89 2.24a3 3 0 0 0-4.24 0L1.12 9.77a1 1 0 0 0-.25.46L.02 14.82a1 1 0 0 0 1.16 1.16l4.59-.85a1 1 0 0 0 .46-.25L13.76 7.4a3 3 0 0 0 0-4.24l-.87-.92zm-2.8 2.8L11.5 6.46l-7 7H3.08v-1.42l7-7zm-4.7 9.58L3 13.92V13h.92l.7 1.42-.8.2z",
+    website: "M12.005 0C5.38 0 0 5.38 0 12.005c0 6.625 5.38 12.005 12.005 12.005 6.625 0 12.005-5.38 12.005-12.005C24.01 5.38 18.63 0 12.005 0zm7.65 8h-3.32c-.36-1.57-.83-3.08-1.43-4.45 2.05.65 3.75 2.16 4.75 4.45zm-6.65-4.72c.67 1.4 1.18 2.99 1.48 4.72h-2.96c.3-1.73.81-3.32 1.48-4.72zm-1-1.22V8H6.55c.31-1.73.82-3.32 1.48-4.72.67 1.4 1.18 2.99 1.48 4.72zm-5.48 1.5c-.6 1.37-1.07 2.88-1.43 4.45H3.68c1-2.29 2.7-3.8 4.75-4.45zm-4.87 5.95h3.62c-.08.74-.15 1.5-.15 2.25s.07 1.51.15 2.25H2.65c-.15-.72-.25-1.48-.25-2.25s.1-1.53.25-2.25zm.9 5.95h3.32c.36 1.57.83 3.08 1.43 4.45-2.05-.65-3.75-2.16-4.75-4.45zm6.65 4.72c-.67-1.4-1.18-2.99-1.48-4.72h2.96c-.3 1.73-.81 3.32-1.48 4.72zm1 1.22v-3.5h2.96c-.31 1.73-.82 3.32-1.48 4.72-.67-1.4-1.18-2.99-1.48-4.72zm5.48-1.5c.6-1.37 1.07-2.88 1.43-4.45h3.62c-1 2.29-2.7 3.8-4.75 4.45zm4.87-5.95h-3.62c.08-.74.15-1.5.15-2.25s-.07-1.51-.15-2.25h3.62c.15.72.25 1.48.25 2.25s-.1 1.53-.25 2.25z"
+  };
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : '';
 
@@ -310,16 +344,59 @@ export default async function handler(req, res) {
 
   if (view === 'all') {
     const displayBio = bio || data.bio;
-    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="260">
+
+    const activeSocials = [];
+    if (instagram) activeSocials.push({ id: 'instagram', url: instagram, path: SOCIAL_PATHS.instagram });
+    if (facebook) activeSocials.push({ id: 'facebook', url: facebook, path: SOCIAL_PATHS.facebook });
+    if (threads) activeSocials.push({ id: 'threads', url: threads, path: SOCIAL_PATHS.threads });
+    if (linkedin) activeSocials.push({ id: 'linkedin', url: linkedin, path: SOCIAL_PATHS.linkedin });
+    if (x) activeSocials.push({ id: 'x', url: x, path: SOCIAL_PATHS.x });
+    if (medium) activeSocials.push({ id: 'medium', url: medium, path: SOCIAL_PATHS.medium });
+    if (blog) activeSocials.push({ id: 'blog', url: blog, path: SOCIAL_PATHS.blog });
+    if (website) activeSocials.push({ id: 'website', url: website, path: SOCIAL_PATHS.website });
+
+    let socialsSVG = '';
+    if (activeSocials.length > 0) {
+      socialsSVG = activeSocials.map((social, idx) => {
+        let xPos = 100 + idx * 32;
+        return `
+          <a href="${escapeXML(social.url)}" target="_blank" class="social-icon">
+            <g transform="translate(${xPos}, 105)">
+              <rect width="24" height="24" rx="6" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1"/>
+              <g transform="translate(4, 4) scale(0.667)">
+                <path d="${social.path}" fill="${p.textSecondary}"/>
+              </g>
+            </g>
+          </a>
+        `;
+      }).join('');
+    }
+
+    const cardHeight = activeSocials.length > 0 ? 300 : 260;
+    const reposY = activeSocials.length > 0 ? 190 : 150;
+    const avatarUrl = data.avatarUrl || 'https://raw.githubusercontent.com/JaibhagwanJindal/octovibe/main/logo.png';
+
+    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="${cardHeight}">
+      <style>
+        .social-icon { transition: all 0.3s ease; }
+        .social-icon:hover rect { stroke: ${p.primaryColor}; fill: ${p.cardBg}; }
+        .social-icon:hover path { fill: ${p.primaryColor}; }
+      </style>
+      <defs>
+        <clipPath id="avatar-clip">
+          <circle cx="40" cy="40" r="38.5"/>
+        </clipPath>
+      </defs>
       <rect width="100%" height="100%" fill="${p.background}" rx="14" stroke="${p.cardBorder}" stroke-width="1"/>
       <g transform="translate(30, 45)">
         <circle cx="40" cy="40" r="40" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="3"/>
-        <text x="40" y="46" fill="${p.textPrimary}" font-family="sans-serif" font-size="24" text-anchor="middle">🐙</text>
+        <image href="${avatarUrl}" x="1.5" y="1.5" width="77" height="77" clip-path="url(#avatar-clip)"/>
         <text x="100" y="35" font-weight="800" font-size="22" fill="${p.primaryColor}" font-family="sans-serif">${escapeXML(data.name)}</text>
         <text x="100" y="60" font-family="sans-serif" font-size="14" fill="${p.textSecondary}">@${data.login}</text>
         <text x="100" y="85" font-family="sans-serif" font-size="12" fill="${p.textTertiary}">${escapeXML(displayBio)}</text>
+        ${socialsSVG}
       </g>
-      <g transform="translate(30, 150)" font-family="sans-serif">
+      <g transform="translate(30, ${reposY})" font-family="sans-serif">
         <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">REPOSITORIES</text><text x="0" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.repos}</text>
         <text x="160" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">TOTAL STARS</text><text x="160" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.stars}</text>
         <text x="320" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">LIFETIME CONTRIBUTIONS</text><text x="320" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.commits}</text>
@@ -461,19 +538,51 @@ export default async function handler(req, res) {
     for (const section of activeSections) {
       if (section === 'hero') {
         const displayBio = bio || data.bio;
-        const sectionHeight = 240;
+
+        const activeSocials = [];
+        if (instagram) activeSocials.push({ id: 'instagram', url: instagram, path: SOCIAL_PATHS.instagram });
+        if (facebook) activeSocials.push({ id: 'facebook', url: facebook, path: SOCIAL_PATHS.facebook });
+        if (threads) activeSocials.push({ id: 'threads', url: threads, path: SOCIAL_PATHS.threads });
+        if (linkedin) activeSocials.push({ id: 'linkedin', url: linkedin, path: SOCIAL_PATHS.linkedin });
+        if (x) activeSocials.push({ id: 'x', url: x, path: SOCIAL_PATHS.x });
+        if (medium) activeSocials.push({ id: 'medium', url: medium, path: SOCIAL_PATHS.medium });
+        if (blog) activeSocials.push({ id: 'blog', url: blog, path: SOCIAL_PATHS.blog });
+        if (website) activeSocials.push({ id: 'website', url: website, path: SOCIAL_PATHS.website });
+
+        let socialsSVG = '';
+        if (activeSocials.length > 0) {
+          socialsSVG = activeSocials.map((social, idx) => {
+            let xPos = 100 + idx * 32;
+            return `
+              <a href="${escapeXML(social.url)}" target="_blank" class="social-icon">
+                <g transform="translate(${xPos}, 105)">
+                  <rect width="24" height="24" rx="6" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1"/>
+                  <g transform="translate(4, 4) scale(0.667)">
+                    <path d="${social.path}" fill="${p.textSecondary}"/>
+                  </g>
+                </g>
+              </a>
+            `;
+          }).join('');
+        }
+
+        const sectionHeight = activeSocials.length > 0 ? 270 : 240;
+        const reposY = activeSocials.length > 0 ? 175 : 145;
+        const avatarUrl = data.avatarUrl || 'https://raw.githubusercontent.com/JaibhagwanJindal/octovibe/main/logo.png';
+
         const hasDivider = currentY > 0;
         sectionSvgs.push(`
           ${hasDivider ? `<line x1="20" y1="${currentY}" x2="760" y2="${currentY}" stroke="${p.cardBorder}" stroke-width="1"/>` : ''}
           <g transform="translate(0, ${currentY})">
             <g transform="translate(30, 35)">
               <circle cx="40" cy="40" r="40" fill="${p.cardBg}" stroke="${p.primaryColor}" stroke-width="3"/>
-              <text x="40" y="46" fill="${p.textPrimary}" font-family="sans-serif" font-size="24" text-anchor="middle">🐙</text>
+              <image href="${avatarUrl}" x="1.5" y="1.5" width="77" height="77" clip-path="url(#avatar-clip)"/>
               <text x="100" y="35" font-weight="800" font-size="22" fill="${p.primaryColor}" font-family="sans-serif">${escapeXML(data.name)}</text>
               <text x="100" y="60" font-family="sans-serif" font-size="14" fill="${p.textSecondary}">@${data.login}</text>
               <text x="100" y="85" font-family="sans-serif" font-size="12" fill="${p.textTertiary}">${escapeXML(displayBio)}</text>
+              ${socialsSVG}
             </g>
-            <g transform="translate(30, 145)" font-family="sans-serif">
+            <g transform="translate(30, ${reposY})" font-family="sans-serif">
               <text x="0" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">REPOSITORIES</text><text x="0" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.repos}</text>
               <text x="160" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">TOTAL STARS</text><text x="160" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.stars}</text>
               <text x="320" y="0" font-size="11" font-weight="bold" fill="${p.textTertiary}">LIFETIME CONTRIBUTIONS</text><text x="320" y="28" font-size="20" font-weight="700" fill="${p.textPrimary}">${data.commits}</text>
@@ -625,7 +734,15 @@ export default async function handler(req, res) {
     const totalCardHeight = currentY + 20;
 
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="${totalCardHeight}">
+      <style>
+        .social-icon { transition: all 0.3s ease; }
+        .social-icon:hover rect { stroke: ${p.primaryColor}; fill: ${p.cardBg}; }
+        .social-icon:hover path { fill: ${p.primaryColor}; }
+      </style>
       <defs>
+        <clipPath id="avatar-clip">
+          <circle cx="40" cy="40" r="38.5"/>
+        </clipPath>
         <filter id="glow-bronze" x="-30%" y="-30%" width="160%" height="160%">
           <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#cd7f32" flood-opacity="0.5"/>
         </filter>
