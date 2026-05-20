@@ -37,11 +37,14 @@ Bring a sleek, premium, gamified gaming dashboard look to your GitHub profile:
 
 ### 🐙 Authentic Avatar & Branding Fallback
 * Seamlessly renders the user's authentic live GitHub avatar masked cleanly inside a circular clipping border.
-* Automatically falls back to the transparent `logo.png` hosted directly in the repository for clean rendering if the custom avatar fails or is anonymous.
+* Implements a secure server-side Base64 fetch pipeline with designated `User-Agent` headers to guarantee error-free rendering.
+* Automatically falls back to the high-fidelity, background-free transparent `logo.png` asset for premium, distraction-free branding.
 
-### 🌐 Social Connections Suite
-Easily input, toggle, and integrate interactive, micro-animated, glassmorphic social icons directly inside the SVG profile cards. Supported platforms:
-* **Instagram** | **Facebook** | **Threads** | **LinkedIn** | **X (formerly Twitter)** | **Medium** | **Blog** | **Website**
+### 🌐 Clickable Social Connections Suite
+Easily input, toggle, and integrate interactive, micro-animated, glassmorphic social badges directly into your profile:
+* **Interactive Markup Badge Row**: Generates independent, clickable HTML link tags below your profile card, resolving relative link redirects on GitHub and ensuring direct redirect pathways.
+* **Pixel-Perfect Vector Icons**: Supported platforms include **Instagram** | **Facebook** | **Threads** | **LinkedIn** | **X (formerly Twitter)** | **Medium** | **Blog** | **Website**.
+* **Cohesive Theme Aesthetics**: Dynamically renders 32x32px themed vector badges that automatically adapt to your active stylesheet HSL colors!
 
 ---
 

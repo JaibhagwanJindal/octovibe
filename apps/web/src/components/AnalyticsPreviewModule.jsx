@@ -216,8 +216,8 @@ export default function AnalyticsPreviewModule({ username }) {
               <div className="space-y-6">
                 <div className="flex items-center gap-6">
                   <img 
-                    src={profile.avatarUrl || 'logo.png'} 
-                    onError={(e) => { e.target.src = 'logo.png'; }} 
+                    src={profile.avatarUrl || '/logo.png'} 
+                    onError={(e) => { e.target.src = '/logo.png'; }} 
                     className="w-20 h-20 rounded-full border-4 shadow-md" 
                     style={{ borderColor: p.primaryColor }} 
                     alt="" 

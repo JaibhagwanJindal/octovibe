@@ -272,9 +272,14 @@ async function fetchUserTelemetry(username, userToken = '') {
   } catch (err) {
     return fallbackData;
   }
+}
 async function fetchAvatarAsBase64(url) {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'OctoVibe-SaaS-Core'
+      }
+    });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const arrayBuffer = await response.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString('base64');
@@ -283,7 +288,11 @@ async function fetchAvatarAsBase64(url) {
   } catch (e) {
     console.error("Avatar fetch failure:", e);
     try {
-      const fallbackRes = await fetch('https://raw.githubusercontent.com/JaibhagwanJindal/octovibe/main/logo.png');
+      const fallbackRes = await fetch('https://raw.githubusercontent.com/JaibhagwanJindal/octovibe/main/logo.png', {
+        headers: {
+          'User-Agent': 'OctoVibe-SaaS-Core'
+        }
+      });
       if (fallbackRes.ok) {
         const arrayBuffer = await fallbackRes.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString('base64');
@@ -338,6 +347,31 @@ export default async function handler(req, res) {
     blog: "M12.89 2.24a3 3 0 0 0-4.24 0L1.12 9.77a1 1 0 0 0-.25.46L.02 14.82a1 1 0 0 0 1.16 1.16l4.59-.85a1 1 0 0 0 .46-.25L13.76 7.4a3 3 0 0 0 0-4.24l-.87-.92zm-2.8 2.8L11.5 6.46l-7 7H3.08v-1.42l7-7zm-4.7 9.58L3 13.92V13h.92l.7 1.42-.8.2z",
     website: "M12.005 0C5.38 0 0 5.38 0 12.005c0 6.625 5.38 12.005 12.005 12.005 6.625 0 12.005-5.38 12.005-12.005C24.01 5.38 18.63 0 12.005 0zm7.65 8h-3.32c-.36-1.57-.83-3.08-1.43-4.45 2.05.65 3.75 2.16 4.75 4.45zm-6.65-4.72c.67 1.4 1.18 2.99 1.48 4.72h-2.96c.3-1.73.81-3.32 1.48-4.72zm-1-1.22V8H6.55c.31-1.73.82-3.32 1.48-4.72.67 1.4 1.18 2.99 1.48 4.72zm-5.48 1.5c-.6 1.37-1.07 2.88-1.43 4.45H3.68c1-2.29 2.7-3.8 4.75-4.45zm-4.87 5.95h3.62c-.08.74-.15 1.5-.15 2.25s.07 1.51.15 2.25H2.65c-.15-.72-.25-1.48-.25-2.25s.1-1.53.25-2.25zm.9 5.95h3.32c.36 1.57.83 3.08 1.43 4.45-2.05-.65-3.75-2.16-4.75-4.45zm6.65 4.72c-.67-1.4-1.18-2.99-1.48-4.72h2.96c-.3 1.73-.81 3.32-1.48 4.72zm1 1.22v-3.5h2.96c-.31 1.73-.82 3.32-1.48 4.72-.67-1.4-1.18-2.99-1.48-4.72zm5.48-1.5c.6-1.37 1.07-2.88 1.43-4.45h3.62c-1 2.29-2.7 3.8-4.75 4.45zm4.87-5.95h-3.62c.08-.74.15-1.5.15-2.25s-.07-1.51-.15-2.25h3.62c.15.72.25 1.48.25 2.25s-.1 1.53-.25 2.25z"
   };
+
+  const activeTheme = THEMES.find(t => t.id === theme) || THEMES[0];
+  const p = activeTheme.palette;
+
+  if (view === 'social') {
+    const { platform = 'website' } = req.query;
+    const path = SOCIAL_PATHS[platform] || SOCIAL_PATHS.website;
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+      <style>
+        .social-icon-btn { transition: all 0.3s ease; cursor: pointer; }
+        .social-icon-btn:hover rect { stroke: ${p.primaryColor}; fill: ${p.cardBg}; }
+        .social-icon-btn:hover path { fill: ${p.primaryColor}; }
+      </style>
+      <g class="social-icon-btn">
+        <rect width="30" height="30" x="1" y="1" rx="8" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1"/>
+        <g transform="translate(6, 6) scale(0.833)">
+          <path d="${path}" fill="${p.textSecondary}"/>
+        </g>
+      </g>
+    </svg>`;
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800');
+    return res.status(200).send(svgContent);
+  }
+
   const authHeader = req.headers.authorization || '';
   const userToken = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : '';
 
@@ -354,8 +388,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ profile: data, trophies });
   }
 
-  const activeTheme = THEMES.find(t => t.id === theme) || THEMES[0];
-  const p = activeTheme.palette;
   let svgContent = '';
 
   const escapeXML = str => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
@@ -788,23 +820,7 @@ export default async function handler(req, res) {
     </svg>`;
   }
   
-  else if (view === 'social') {
-    const { platform = 'website' } = req.query;
-    const path = SOCIAL_PATHS[platform] || SOCIAL_PATHS.website;
-    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-      <style>
-        .social-icon-btn { transition: all 0.3s ease; cursor: pointer; }
-        .social-icon-btn:hover rect { stroke: ${p.primaryColor}; fill: ${p.cardBg}; }
-        .social-icon-btn:hover path { fill: ${p.primaryColor}; }
-      </style>
-      <g class="social-icon-btn">
-        <rect width="30" height="30" x="1" y="1" rx="8" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1"/>
-        <g transform="translate(6, 6) scale(0.833)">
-          <path d="${path}" fill="${p.textSecondary}"/>
-        </g>
-      </g>
-    </svg>`;
-  }
+
 
   res.setHeader('Content-Type', 'image/svg+xml');
   res.setHeader('Cache-Control', 'max-age=0, s-maxage=3600, must-revalidate');
