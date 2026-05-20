@@ -350,6 +350,24 @@ export default function App() {
     try {
       const baseUrl = `https://octovibe.vercel.app/api/render?user=${displayProfile.login}&theme=${activeTheme}`;
       
+      const activeSocials = [
+        { id: 'instagram', url: socials.instagram },
+        { id: 'facebook', url: socials.facebook },
+        { id: 'threads', url: socials.threads },
+        { id: 'linkedin', url: socials.linkedin },
+        { id: 'x', url: socials.x },
+        { id: 'medium', url: socials.medium },
+        { id: 'blog', url: socials.blog },
+        { id: 'website', url: socials.website }
+      ].filter(s => s.url);
+
+      let socialsHtml = '';
+      if (visible.socials && activeSocials.length > 0) {
+        socialsHtml = '\n<p align="center">\n' + activeSocials.map(s => {
+          return `  <a href="${s.url}" target="_blank"><img src="https://octovibe.vercel.app/api/render?view=social&platform=${s.id}&theme=${activeTheme}" width="32" height="32" style="margin: 0 4px;" /></a>`;
+        }).join('\n') + '\n</p>\n';
+      }
+
       let mdContent = '';
       if (renderMode === 'combined') {
         const renderImg = `<a href="https://github.com/JaibhagwanJindal/octovibe"><img src="${getEmbedUrl('combined', baseUrl)}" alt="OctoVibe Metric" /></a>`;
@@ -358,7 +376,7 @@ export default function App() {
 <p align="center">
   ${renderImg}
 </p>
-`;
+${socialsHtml}`;
       } else {
         const renderImg = (type) => `<a href="https://github.com/JaibhagwanJindal/octovibe"><img src="${getEmbedUrl(type, baseUrl)}" alt="OctoVibe Metric" /></a>`;
         mdContent = `<h1 align="center">Hi 👋, I'm ${displayProfile.name}</h1>
@@ -366,7 +384,7 @@ export default function App() {
 <p align="center">
   ${renderImg('all')}${visible.streak ? renderImg('streak') : ''}${visible.languages ? renderImg('arsenal') : ''}${visible.trophies ? renderImg('trophies') : ''}${visible.art ? renderImg('art') : ''}
 </p>
-`;
+${socialsHtml}`;
       }
       const repoName = displayProfile.login;
       let sha = null;

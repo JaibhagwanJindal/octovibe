@@ -272,6 +272,28 @@ async function fetchUserTelemetry(username, userToken = '') {
   } catch (err) {
     return fallbackData;
   }
+async function fetchAvatarAsBase64(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = response.headers.get('content-type') || 'image/png';
+    return `data:${mimeType};base64,${base64}`;
+  } catch (e) {
+    console.error("Avatar fetch failure:", e);
+    try {
+      const fallbackRes = await fetch('https://raw.githubusercontent.com/JaibhagwanJindal/octovibe/main/logo.png');
+      if (fallbackRes.ok) {
+        const arrayBuffer = await fallbackRes.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        return `data:image/png;base64,${base64}`;
+      }
+    } catch (fallbackError) {
+      console.error("Fallback avatar load error:", fallbackError);
+    }
+    return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+  }
 }
 
 export default async function handler(req, res) {
@@ -321,6 +343,11 @@ export default async function handler(req, res) {
 
   const data = await fetchUserTelemetry(user, userToken);
   const trophies = calculateAllTrophies(data);
+
+  let base64Avatar = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+  if ((view === 'all' || view === 'combined') && data.avatarUrl) {
+    base64Avatar = await fetchAvatarAsBase64(data.avatarUrl);
+  }
 
   if (json === 'true') {
     res.setHeader('Content-Type', 'application/json');
@@ -374,7 +401,7 @@ export default async function handler(req, res) {
 
     const cardHeight = activeSocials.length > 0 ? 300 : 260;
     const reposY = activeSocials.length > 0 ? 190 : 150;
-    const avatarUrl = data.avatarUrl || 'https://raw.githubusercontent.com/JaibhagwanJindal/octovibe/main/logo.png';
+    const avatarUrl = base64Avatar;
 
     svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="780" height="${cardHeight}">
       <style>
@@ -568,7 +595,7 @@ export default async function handler(req, res) {
 
         const sectionHeight = activeSocials.length > 0 ? 270 : 240;
         const reposY = activeSocials.length > 0 ? 175 : 145;
-        const avatarUrl = data.avatarUrl || 'https://raw.githubusercontent.com/JaibhagwanJindal/octovibe/main/logo.png';
+        const avatarUrl = base64Avatar;
 
         const hasDivider = currentY > 0;
         sectionSvgs.push(`
@@ -758,6 +785,24 @@ export default async function handler(req, res) {
       </defs>
       <rect width="100%" height="100%" fill="${p.background}" rx="14" stroke="${p.cardBorder}" stroke-width="1"/>
       ${sectionSvgs.join('')}
+    </svg>`;
+  }
+  
+  else if (view === 'social') {
+    const { platform = 'website' } = req.query;
+    const path = SOCIAL_PATHS[platform] || SOCIAL_PATHS.website;
+    svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+      <style>
+        .social-icon-btn { transition: all 0.3s ease; cursor: pointer; }
+        .social-icon-btn:hover rect { stroke: ${p.primaryColor}; fill: ${p.cardBg}; }
+        .social-icon-btn:hover path { fill: ${p.primaryColor}; }
+      </style>
+      <g class="social-icon-btn">
+        <rect width="30" height="30" x="1" y="1" rx="8" fill="${p.cardBg}" stroke="${p.cardBorder}" stroke-width="1"/>
+        <g transform="translate(6, 6) scale(0.833)">
+          <path d="${path}" fill="${p.textSecondary}"/>
+        </g>
+      </g>
     </svg>`;
   }
 
